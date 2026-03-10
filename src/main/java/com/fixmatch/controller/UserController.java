@@ -186,4 +186,108 @@ public class UserController {
             return ResponseEntity.notFound().build();
         }
     }
+
+    /**
+     * Get verified providers with pagination
+     * 
+     * GET /api/users/providers/verified?page=0&size=10
+     */
+    @GetMapping("/providers/verified")
+    public ResponseEntity<Page<User>> getVerifiedProviders(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "rating") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction) {
+        
+        Sort sort = direction.equalsIgnoreCase("asc") 
+            ? Sort.by(sortBy).ascending() 
+            : Sort.by(sortBy).descending();
+        
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<User> providers = userService.getVerifiedProviders(pageable);
+        return ResponseEntity.ok(providers);
+    }
+
+    /**
+     * Get providers by skill
+     * 
+     * GET /api/users/providers/skill/Plumbing
+     */
+    @GetMapping("/providers/skill/{skillName}")
+    public ResponseEntity<List<User>> getProvidersBySkill(@PathVariable String skillName) {
+        List<User> providers = userService.getProvidersBySkill(skillName);
+        return ResponseEntity.ok(providers);
+    }
+
+    /**
+     * Get top-rated providers
+     * 
+     * GET /api/users/providers/top-rated?minRating=4.0
+     */
+    @GetMapping("/providers/top-rated")
+    public ResponseEntity<List<User>> getTopRatedProviders(
+            @RequestParam(defaultValue = "4.0") Double minRating) {
+        List<User> providers = userService.getTopRatedProviders(minRating);
+        return ResponseEntity.ok(providers);
+    }
+
+    /**
+     * Get user statistics
+     * 
+     * GET /api/users/statistics
+     */
+    @GetMapping("/statistics")
+    public ResponseEntity<UserService.UserStatistics> getUserStatistics() {
+        UserService.UserStatistics stats = userService.getUserStatistics();
+        return ResponseEntity.ok(stats);
+    }
+
+    /**
+     * Get recent users (last 30 days)
+     * 
+     * GET /api/users/recent
+     */
+    @GetMapping("/recent")
+    public ResponseEntity<List<User>> getRecentUsers() {
+        List<User> users = userService.getRecentUsers();
+        return ResponseEntity.ok(users);
+    }
+
+    /**
+     * Get experienced providers
+     * 
+     * GET /api/users/providers/experienced?minExperience=5
+     */
+    @GetMapping("/providers/experienced")
+    public ResponseEntity<List<User>> getExperiencedProviders(
+            @RequestParam(defaultValue = "5") Integer minExperience) {
+        List<User> providers = userService.getExperiencedProviders(minExperience);
+        return ResponseEntity.ok(providers);
+    }
+
+    /**
+     * Search users by name
+     * 
+     * GET /api/users/search?name=John
+     */
+    @GetMapping("/search")
+    public ResponseEntity<List<User>> searchUsersByName(@RequestParam String name) {
+        List<User> users = userService.searchUsersByName(name);
+        return ResponseEntity.ok(users);
+    }
+
+    /**
+     * Get user by email
+     * 
+     * GET /api/users/email/{email}
+     */
+    @GetMapping("/email/{email}")
+    public ResponseEntity<User> getUserByEmail(@PathVariable String email) {
+        try {
+            User user = userService.getUserByEmail(email);
+            return ResponseEntity.ok(user);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
 }
