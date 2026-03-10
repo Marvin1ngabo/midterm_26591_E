@@ -62,4 +62,70 @@ public interface JobRepository extends JpaRepository<Job, Long> {
         @Param("provinceCode") String provinceCode,
         Pageable pageable
     );
+
+    /**
+     * Find jobs by budget range
+     */
+    @Query("SELECT j FROM Job j WHERE j.budget BETWEEN :minBudget AND :maxBudget")
+    Page<Job> findJobsByBudgetRange(
+        @Param("minBudget") java.math.BigDecimal minBudget,
+        @Param("maxBudget") java.math.BigDecimal maxBudget,
+        Pageable pageable
+    );
+
+    /**
+     * Find available jobs (OPEN status) with pagination
+     */
+    @Query("SELECT j FROM Job j WHERE j.status = 'OPEN' ORDER BY j.createdAt DESC")
+    Page<Job> findAvailableJobs(Pageable pageable);
+
+    /**
+     * Find jobs by title containing keyword (case-insensitive)
+     */
+    @Query("SELECT j FROM Job j WHERE LOWER(j.title) LIKE LOWER(CONCAT('%', :keyword, '%'))")
+    Page<Job> searchJobsByTitle(@Param("keyword") String keyword, Pageable pageable);
+
+    /**
+     * Count jobs by status
+     */
+    long countByStatus(JobStatus status);
+
+    /**
+     * Count jobs by client
+     */
+    long countByClientId(Long clientId);
+
+    /**
+     * Count completed jobs by provider
+     */
+    long countByProviderIdAndStatus(Long providerId, JobStatus status);
+
+    /**
+     * Find recent jobs (created in last N days)
+     */
+    @Query("SELECT j FROM Job j WHERE j.createdAt >= :sinceDate ORDER BY j.createdAt DESC")
+    List<Job> findRecentJobs(@Param("sinceDate") java.time.LocalDateTime sinceDate);
+
+    /**
+     * Find jobs by district
+     */
+    Page<Job> findByDistrictId(Long districtId, Pageable pageable);
+
+    /**
+     * Find high-budget jobs (above specified amount)
+     */
+    @Query("SELECT j FROM Job j WHERE j.budget >= :minBudget ORDER BY j.budget DESC")
+    Page<Job> findHighBudgetJobs(@Param("minBudget") java.math.BigDecimal minBudget, Pageable pageable);
+
+    /**
+     * Find jobs by multiple statuses
+     */
+    @Query("SELECT j FROM Job j WHERE j.status IN :statuses")
+    Page<Job> findJobsByStatuses(@Param("statuses") List<JobStatus> statuses, Pageable pageable);
+
+    /**
+     * Get job statistics by province
+     */
+    @Query("SELECT p.name, COUNT(j) FROM Job j JOIN j.district d JOIN d.province p GROUP BY p.name")
+    List<Object[]> getJobStatsByProvince();
 }
