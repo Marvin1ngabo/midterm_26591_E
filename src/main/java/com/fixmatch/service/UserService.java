@@ -162,4 +162,103 @@ public class UserService {
         }
         userRepository.deleteById(id);
     }
+
+    /**
+     * Get verified providers with pagination
+     */
+    public Page<User> getVerifiedProviders(Pageable pageable) {
+        return userRepository.findVerifiedProviders(pageable);
+    }
+
+    /**
+     * Find providers by skill
+     */
+    public List<User> getProvidersBySkill(String skillName) {
+        return userRepository.findProvidersBySkill(skillName);
+    }
+
+    /**
+     * Get top-rated providers
+     */
+    public List<User> getTopRatedProviders(Double minRating) {
+        return userRepository.findTopRatedProviders(minRating);
+    }
+
+    /**
+     * Get user statistics
+     */
+    public UserStatistics getUserStatistics() {
+        long totalUsers = userRepository.count();
+        long totalClients = userRepository.countByUserType(UserType.CLIENT);
+        long totalProviders = userRepository.countByUserType(UserType.PROVIDER);
+        long totalBoth = userRepository.countByUserType(UserType.BOTH);
+        
+        return new UserStatistics(totalUsers, totalClients, totalProviders, totalBoth);
+    }
+
+    /**
+     * Get recent users (last 30 days)
+     */
+    public List<User> getRecentUsers() {
+        java.time.LocalDateTime thirtyDaysAgo = java.time.LocalDateTime.now().minusDays(30);
+        return userRepository.findRecentUsers(thirtyDaysAgo);
+    }
+
+    /**
+     * Find experienced providers
+     */
+    public List<User> getExperiencedProviders(Integer minExperience) {
+        return userRepository.findExperiencedProviders(minExperience);
+    }
+
+    /**
+     * Search users by name
+     */
+    public List<User> searchUsersByName(String name) {
+        return userRepository.searchByName(name);
+    }
+
+    /**
+     * Validate user registration data
+     */
+    public void validateUserRegistration(User user) {
+        if (user.getName() == null || user.getName().trim().isEmpty()) {
+            throw new IllegalArgumentException("Name is required");
+        }
+        
+        if (user.getEmail() == null || user.getEmail().trim().isEmpty()) {
+            throw new IllegalArgumentException("Email is required");
+        }
+        
+        if (user.getPassword() == null || user.getPassword().length() < 6) {
+            throw new IllegalArgumentException("Password must be at least 6 characters");
+        }
+        
+        if (user.getUserType() == null) {
+            throw new IllegalArgumentException("User type is required");
+        }
+    }
+
+    /**
+     * Inner class for user statistics
+     */
+    public static class UserStatistics {
+        private final long totalUsers;
+        private final long totalClients;
+        private final long totalProviders;
+        private final long totalBoth;
+
+        public UserStatistics(long totalUsers, long totalClients, long totalProviders, long totalBoth) {
+            this.totalUsers = totalUsers;
+            this.totalClients = totalClients;
+            this.totalProviders = totalProviders;
+            this.totalBoth = totalBoth;
+        }
+
+        // Getters
+        public long getTotalUsers() { return totalUsers; }
+        public long getTotalClients() { return totalClients; }
+        public long getTotalProviders() { return totalProviders; }
+        public long getTotalBoth() { return totalBoth; }
+    }
 }
