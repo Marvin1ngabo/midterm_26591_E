@@ -97,5 +97,75 @@ public class Job {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+        
+        // Automatically set completion time when job is completed
+        if (status == JobStatus.COMPLETED && completedAt == null) {
+            completedAt = LocalDateTime.now();
+        }
+    }
+
+    /**
+     * Check if job is available for providers to accept
+     */
+    public boolean isAvailable() {
+        return status == JobStatus.OPEN;
+    }
+
+    /**
+     * Check if job is currently in progress
+     */
+    public boolean isInProgress() {
+        return status == JobStatus.IN_PROGRESS;
+    }
+
+    /**
+     * Check if job is completed
+     */
+    public boolean isCompleted() {
+        return status == JobStatus.COMPLETED;
+    }
+
+    /**
+     * Assign a provider to this job
+     */
+    public void assignProvider(User provider) {
+        if (!isAvailable()) {
+            throw new IllegalStateException("Job is not available for assignment");
+        }
+        if (!provider.isProvider()) {
+            throw new IllegalArgumentException("User is not a provider");
+        }
+        
+        this.provider = provider;
+        this.status = JobStatus.IN_PROGRESS;
+    }
+
+    /**
+     * Mark job as completed
+     */
+    public void markAsCompleted() {
+        if (!isInProgress()) {
+            throw new IllegalStateException("Job must be in progress to be completed");
+        }
+        
+        this.status = JobStatus.COMPLETED;
+        this.completedAt = LocalDateTime.now();
+    }
+
+    /**
+     * Get formatted budget string
+     */
+    public String getFormattedBudget() {
+        return budget != null ? "RWF " + budget.toString() : "Budget not set";
+    }
+
+    /**
+     * Get job location as string
+     */
+    public String getJobLocation() {
+        if (district != null && district.getProvince() != null) {
+            return district.getName() + ", " + district.getProvince().getName();
+        }
+        return district != null ? district.getName() : "Location not set";
     }
 }
