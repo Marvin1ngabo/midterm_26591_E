@@ -2,6 +2,8 @@ package com.fixmatch;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 /**
  * Main Application Class for FixMatch Gig Management System
@@ -10,8 +12,13 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * - @Configuration: Tags the class as a source of bean definitions
  * - @EnableAutoConfiguration: Tells Spring Boot to start adding beans based on classpath settings
  * - @ComponentScan: Tells Spring to look for components, configurations, and services in the com.fixmatch package
+ * 
+ * @EnableJpaRepositories: Enables JPA repositories scanning
+ * @EnableTransactionManagement: Enables Spring's annotation-driven transaction management
  */
 @SpringBootApplication
+@EnableJpaRepositories
+@EnableTransactionManagement
 public class FixMatchApplication {
 
     public static void main(String[] args) {
