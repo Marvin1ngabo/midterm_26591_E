@@ -93,4 +93,86 @@ public class ProviderProfile {
         this.skills.remove(skill);
         skill.getProviders().remove(this);
     }
+
+    /**
+     * Check if provider is verified
+     */
+    public boolean isVerified() {
+        return verificationStatus != null && verificationStatus;
+    }
+
+    /**
+     * Check if provider has experience
+     */
+    public boolean hasExperience() {
+        return yearsExperience != null && yearsExperience > 0;
+    }
+
+    /**
+     * Get experience level as string
+     */
+    public String getExperienceLevel() {
+        if (yearsExperience == null || yearsExperience == 0) {
+            return "Beginner";
+        } else if (yearsExperience <= 2) {
+            return "Junior";
+        } else if (yearsExperience <= 5) {
+            return "Intermediate";
+        } else if (yearsExperience <= 10) {
+            return "Senior";
+        } else {
+            return "Expert";
+        }
+    }
+
+    /**
+     * Get formatted hourly rate
+     */
+    public String getFormattedHourlyRate() {
+        return hourlyRate != null ? "RWF " + hourlyRate + "/hour" : "Rate not set";
+    }
+
+    /**
+     * Get rating as percentage
+     */
+    public String getRatingPercentage() {
+        if (rating == null || rating.equals(BigDecimal.ZERO)) {
+            return "No rating yet";
+        }
+        return (rating.multiply(BigDecimal.valueOf(20)).intValue()) + "%";
+    }
+
+    /**
+     * Check if provider has specific skill
+     */
+    public boolean hasSkill(String skillName) {
+        return skills.stream()
+                .anyMatch(skill -> skill.getName().equalsIgnoreCase(skillName));
+    }
+
+    /**
+     * Get comma-separated skills string
+     */
+    public String getSkillsAsString() {
+        if (skills.isEmpty()) {
+            return "No skills listed";
+        }
+        return skills.stream()
+                .map(Skill::getName)
+                .reduce((s1, s2) -> s1 + ", " + s2)
+                .orElse("No skills listed");
+    }
+
+    /**
+     * Update rating based on new job completion
+     */
+    public void updateRatingAndJobCount(BigDecimal newRating) {
+        if (newRating != null && newRating.compareTo(BigDecimal.ZERO) > 0) {
+            // Calculate weighted average
+            BigDecimal totalRating = rating.multiply(BigDecimal.valueOf(totalJobsCompleted));
+            totalRating = totalRating.add(newRating);
+            totalJobsCompleted++;
+            rating = totalRating.divide(BigDecimal.valueOf(totalJobsCompleted), 2, BigDecimal.ROUND_HALF_UP);
+        }
+    }
 }
