@@ -193,4 +193,138 @@ public class JobController {
         Page<Job> jobs = jobService.getOpenJobsByCategoryAndProvince(categoryId, province, pageable);
         return ResponseEntity.ok(jobs);
     }
+
+    /**
+     * Get jobs by budget range
+     * 
+     * GET /api/jobs/budget?min=5000&max=50000&page=0&size=10
+     */
+    @GetMapping("/budget")
+    public ResponseEntity<Page<Job>> getJobsByBudgetRange(
+            @RequestParam java.math.BigDecimal min,
+            @RequestParam java.math.BigDecimal max,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by("budget").descending());
+        Page<Job> jobs = jobService.getJobsByBudgetRange(min, max, pageable);
+        return ResponseEntity.ok(jobs);
+    }
+
+    /**
+     * Get available jobs (OPEN status)
+     * 
+     * GET /api/jobs/available?page=0&size=10
+     */
+    @GetMapping("/available")
+    public ResponseEntity<Page<Job>> getAvailableJobs(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Job> jobs = jobService.getAvailableJobs(pageable);
+        return ResponseEntity.ok(jobs);
+    }
+
+    /**
+     * Search jobs by title
+     * 
+     * GET /api/jobs/search/title?keyword=plumbing&page=0&size=10
+     */
+    @GetMapping("/search/title")
+    public ResponseEntity<Page<Job>> searchJobsByTitle(
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<Job> jobs = jobService.searchJobsByTitle(keyword, pageable);
+        return ResponseEntity.ok(jobs);
+    }
+
+    /**
+     * Get job statistics
+     * 
+     * GET /api/jobs/statistics
+     */
+    @GetMapping("/statistics")
+    public ResponseEntity<JobService.JobStatistics> getJobStatistics() {
+        JobService.JobStatistics stats = jobService.getJobStatistics();
+        return ResponseEntity.ok(stats);
+    }
+
+    /**
+     * Get recent jobs (last 7 days)
+     * 
+     * GET /api/jobs/recent
+     */
+    @GetMapping("/recent")
+    public ResponseEntity<java.util.List<Job>> getRecentJobs() {
+        java.util.List<Job> jobs = jobService.getRecentJobs();
+        return ResponseEntity.ok(jobs);
+    }
+
+    /**
+     * Get high-budget jobs
+     * 
+     * GET /api/jobs/high-budget?minBudget=20000&page=0&size=10
+     */
+    @GetMapping("/high-budget")
+    public ResponseEntity<Page<Job>> getHighBudgetJobs(
+            @RequestParam(defaultValue = "20000") java.math.BigDecimal minBudget,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Job> jobs = jobService.getHighBudgetJobs(minBudget, pageable);
+        return ResponseEntity.ok(jobs);
+    }
+
+    /**
+     * Cancel job
+     * 
+     * PUT /api/jobs/{jobId}/cancel
+     */
+    @PutMapping("/{jobId}/cancel")
+    public ResponseEntity<Job> cancelJob(@PathVariable Long jobId) {
+        try {
+            Job cancelled = jobService.cancelJob(jobId);
+            return ResponseEntity.ok(cancelled);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    /**
+     * Get provider's completed job count
+     * 
+     * GET /api/jobs/provider/{providerId}/completed-count
+     */
+    @GetMapping("/provider/{providerId}/completed-count")
+    public ResponseEntity<Long> getProviderCompletedJobCount(@PathVariable Long providerId) {
+        long count = jobService.getProviderCompletedJobCount(providerId);
+        return ResponseEntity.ok(count);
+    }
+
+    /**
+     * Get client's total job count
+     * 
+     * GET /api/jobs/client/{clientId}/count
+     */
+    @GetMapping("/client/{clientId}/count")
+    public ResponseEntity<Long> getClientJobCount(@PathVariable Long clientId) {
+        long count = jobService.getClientJobCount(clientId);
+        return ResponseEntity.ok(count);
+    }
+
+    /**
+     * Get job statistics by province
+     * 
+     * GET /api/jobs/statistics/province
+     */
+    @GetMapping("/statistics/province")
+    public ResponseEntity<java.util.List<Object[]>> getJobStatsByProvince() {
+        java.util.List<Object[]> stats = jobService.getJobStatsByProvince();
+        return ResponseEntity.ok(stats);
+    }
 }
