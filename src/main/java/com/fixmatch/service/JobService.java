@@ -155,4 +155,141 @@ public class JobService {
         return jobRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Job not found with id: " + id));
     }
+
+    /**
+     * Get jobs by budget range
+     */
+    public Page<Job> getJobsByBudgetRange(
+            java.math.BigDecimal minBudget, 
+            java.math.BigDecimal maxBudget, 
+            Pageable pageable) {
+        return jobRepository.findJobsByBudgetRange(minBudget, maxBudget, pageable);
+    }
+
+    /**
+     * Get available jobs (OPEN status)
+     */
+    public Page<Job> getAvailableJobs(Pageable pageable) {
+        return jobRepository.findAvailableJobs(pageable);
+    }
+
+    /**
+     * Search jobs by title
+     */
+    public Page<Job> searchJobsByTitle(String keyword, Pageable pageable) {
+        return jobRepository.searchJobsByTitle(keyword, pageable);
+    }
+
+    /**
+     * Get job statistics
+     */
+    public JobStatistics getJobStatistics() {
+        long totalJobs = jobRepository.count();
+        long openJobs = jobRepository.countByStatus(JobStatus.OPEN);
+        long inProgressJobs = jobRepository.countByStatus(JobStatus.IN_PROGRESS);
+        long completedJobs = jobRepository.countByStatus(JobStatus.COMPLETED);
+        
+        return new JobStatistics(totalJobs, openJobs, inProgressJobs, completedJobs);
+    }
+
+    /**
+     * Get recent jobs (last 7 days)
+     */
+    public java.util.List<Job> getRecentJobs() {
+        java.time.LocalDateTime sevenDaysAgo = java.time.LocalDateTime.now().minusDays(7);
+        return jobRepository.findRecentJobs(sevenDaysAgo);
+    }
+
+    /**
+     * Get high-budget jobs
+     */
+    public Page<Job> getHighBudgetJobs(java.math.BigDecimal minBudget, Pageable pageable) {
+        return jobRepository.findHighBudgetJobs(minBudget, pageable);
+    }
+
+    /**
+     * Cancel job (only if OPEN)
+     */
+    public Job cancelJob(Long jobId) {
+        Job job = getJobById(jobId);
+        
+        if (job.getStatus() != JobStatus.OPEN) {
+            throw new IllegalStateException("Only open jobs can be cancelled");
+        }
+        
+        job.setStatus(JobStatus.CANCELLED);
+        return jobRepository.save(job);
+    }
+
+    /**
+     * Get provider's completed job count
+     */
+    public long getProviderCompletedJobCount(Long providerId) {
+        return jobRepository.countByProviderIdAndStatus(providerId, JobStatus.COMPLETED);
+    }
+
+    /**
+     * Get client's total job count
+     */
+    public long getClientJobCount(Long clientId) {
+        return jobRepository.countByClientId(clientId);
+    }
+
+    /**
+     * Validate job creation data
+     */
+    public void validateJobCreation(Job job) {
+        if (job.getTitle() == null || job.getTitle().trim().isEmpty()) {
+            throw new IllegalArgumentException("Job title is required");
+        }
+        
+        if (job.getDescription() == null || job.getDescription().trim().isEmpty()) {
+            throw new IllegalArgumentException("Job description is required");
+        }
+        
+        if (job.getBudget() != null && job.getBudget().compareTo(java.math.BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Budget must be positive");
+        }
+    }
+
+    /**
+     * Get jobs by multiple statuses
+     */
+    public Page<Job> getJobsByStatuses(java.util.List<JobStatus> statuses, Pageable pageable) {
+        return jobRepository.findJobsByStatuses(statuses, pageable);
+    }
+
+    /**
+     * Get job statistics by province
+     */
+    public java.util.List<Object[]> getJobStatsByProvince() {
+        return jobRepository.getJobStatsByProvince();
+    }
+
+    /**
+     * Inner class for job statistics
+     */
+    public static class JobStatistics {
+        private final long totalJobs;
+        private final long openJobs;
+        private final long inProgressJobs;
+        private final long completedJobs;
+
+        public JobStatistics(long totalJobs, long openJobs, long inProgressJobs, long completedJobs) {
+            this.totalJobs = totalJobs;
+            this.openJobs = openJobs;
+            this.inProgressJobs = inProgressJobs;
+            this.completedJobs = completedJobs;
+        }
+
+        // Getters
+        public long getTotalJobs() { return totalJobs; }
+        public long getOpenJobs() { return openJobs; }
+        public long getInProgressJobs() { return inProgressJobs; }
+        public long getCompletedJobs() { return completedJobs; }
+        
+        public double getCompletionRate() {
+            return totalJobs > 0 ? (double) completedJobs / totalJobs * 100 : 0;
+        }
+    }
 }
