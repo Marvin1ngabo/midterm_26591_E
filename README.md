@@ -241,28 +241,60 @@ mvn spring-boot:run
 
 Server will start on: `http://localhost:8080`
 
-## 📚 API Endpoints (To be implemented in Controllers)
+## 📚 API Endpoints
+
+### Core Endpoints
+- `GET /api` - API documentation and endpoint listing
+- `GET /api/health` - Health check endpoint
 
 ### Users
-- `GET /api/users` - Get all users (with pagination)
+- `GET /api/users` - Get all users (with sorting)
 - `GET /api/users/{id}` - Get user by ID
-- `POST /api/users` - Create new user
-- `GET /api/users/province/{code}` - Get users by province code
-
-### Providers
-- `GET /api/providers` - Get all providers (with pagination & sorting)
-- `GET /api/providers/skill/{skillName}` - Get providers by skill
-- `GET /api/providers/province/{code}` - Get providers by province
+- `POST /api/users/register` - Register new user
+- `GET /api/users/type/{userType}` - Get users by type (with pagination)
+- `GET /api/users/province/code/{code}` - Get users by province code
+- `GET /api/users/province/name/{name}` - Get users by province name
+- `GET /api/users/providers/verified` - Get verified providers
+- `GET /api/users/providers/skill/{skillName}` - Get providers by skill
+- `GET /api/users/providers/top-rated` - Get top-rated providers
+- `GET /api/users/statistics` - Get user statistics
+- `GET /api/users/recent` - Get recent users
+- `GET /api/users/search` - Search users by name
+- `GET /api/users/exists/email` - Check if email exists
+- `GET /api/users/exists/phone` - Check if phone exists
 
 ### Jobs
 - `GET /api/jobs` - Get all jobs (with pagination)
+- `GET /api/jobs/{id}` - Get job by ID
 - `POST /api/jobs` - Create new job
 - `GET /api/jobs/status/{status}` - Get jobs by status
+- `GET /api/jobs/available` - Get available jobs (OPEN status)
+- `GET /api/jobs/budget` - Get jobs by budget range
+- `GET /api/jobs/search/title` - Search jobs by title
+- `GET /api/jobs/statistics` - Get job statistics
+- `GET /api/jobs/recent` - Get recent jobs
+- `GET /api/jobs/high-budget` - Get high-budget jobs
+- `PUT /api/jobs/{id}/assign` - Assign provider to job
+- `PUT /api/jobs/{id}/complete` - Mark job as completed
+- `PUT /api/jobs/{id}/cancel` - Cancel job
+
+### Providers
+- `GET /api/providers` - Get all providers (with pagination & sorting)
+- `GET /api/providers/{id}` - Get provider by ID
+- `POST /api/providers` - Create provider profile
+- `GET /api/providers/skill/{skillName}` - Get providers by skill
+- `GET /api/providers/province/{code}` - Get providers by province
 
 ### Locations
 - `GET /api/provinces` - Get all provinces
 - `GET /api/districts` - Get all districts
+- `GET /api/districts/province/{provinceId}` - Get districts by province
 - `POST /api/provinces` - Create new province
+
+### Service Categories
+- `GET /api/categories` - Get all service categories
+- `GET /api/categories/{id}` - Get category by ID
+- `POST /api/categories` - Create new category
 
 ## 🎓 Viva-Voce Preparation
 
