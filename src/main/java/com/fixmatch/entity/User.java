@@ -94,4 +94,38 @@ public class User {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
+
+    /**
+     * Utility method to check if user is a provider
+     */
+    public boolean isProvider() {
+        return userType == UserType.PROVIDER || userType == UserType.BOTH;
+    }
+
+    /**
+     * Utility method to check if user is a client
+     */
+    public boolean isClient() {
+        return userType == UserType.CLIENT || userType == UserType.BOTH;
+    }
+
+    /**
+     * Get full location string (District, Province)
+     */
+    public String getFullLocation() {
+        if (district != null && district.getProvince() != null) {
+            return district.getName() + ", " + district.getProvince().getName();
+        }
+        return district != null ? district.getName() : "Location not set";
+    }
+
+    /**
+     * Check if user has a complete profile
+     */
+    public boolean hasCompleteProfile() {
+        return name != null && !name.trim().isEmpty() &&
+               email != null && !email.trim().isEmpty() &&
+               phone != null && !phone.trim().isEmpty() &&
+               district != null;
+    }
 }
