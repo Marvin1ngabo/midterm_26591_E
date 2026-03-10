@@ -108,4 +108,50 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * Find users by district
      */
     List<User> findByDistrictId(Long districtId);
+
+    /**
+     * Find verified providers with pagination and sorting
+     */
+    @Query("SELECT u FROM User u JOIN u.providerProfile p " +
+           "WHERE u.userType IN ('PROVIDER', 'BOTH') AND p.verificationStatus = true")
+    Page<User> findVerifiedProviders(Pageable pageable);
+
+    /**
+     * Find providers by skill name
+     */
+    @Query("SELECT DISTINCT u FROM User u JOIN u.providerProfile p JOIN p.skills s " +
+           "WHERE u.userType IN ('PROVIDER', 'BOTH') AND s.name = :skillName")
+    List<User> findProvidersBySkill(@Param("skillName") String skillName);
+
+    /**
+     * Find top-rated providers with minimum rating
+     */
+    @Query("SELECT u FROM User u JOIN u.providerProfile p " +
+           "WHERE u.userType IN ('PROVIDER', 'BOTH') AND p.rating >= :minRating " +
+           "ORDER BY p.rating DESC")
+    List<User> findTopRatedProviders(@Param("minRating") Double minRating);
+
+    /**
+     * Count users by user type
+     */
+    long countByUserType(UserType userType);
+
+    /**
+     * Find users created in the last N days
+     */
+    @Query("SELECT u FROM User u WHERE u.createdAt >= :sinceDate")
+    List<User> findRecentUsers(@Param("sinceDate") java.time.LocalDateTime sinceDate);
+
+    /**
+     * Find providers with experience greater than specified years
+     */
+    @Query("SELECT u FROM User u JOIN u.providerProfile p " +
+           "WHERE u.userType IN ('PROVIDER', 'BOTH') AND p.yearsExperience >= :minExperience")
+    List<User> findExperiencedProviders(@Param("minExperience") Integer minExperience);
+
+    /**
+     * Search users by name (case-insensitive)
+     */
+    @Query("SELECT u FROM User u WHERE LOWER(u.name) LIKE LOWER(CONCAT('%', :name, '%'))")
+    List<User> searchByName(@Param("name") String name);
 }
