@@ -4,11 +4,11 @@ import com.fixmatch.entity.Job;
 import com.fixmatch.entity.JobStatus;
 import com.fixmatch.entity.User;
 import com.fixmatch.entity.ServiceCategory;
-import com.fixmatch.entity.District;
+import com.fixmatch.entity.Location;
 import com.fixmatch.repository.JobRepository;
 import com.fixmatch.repository.UserRepository;
 import com.fixmatch.repository.ServiceCategoryRepository;
-import com.fixmatch.repository.DistrictRepository;
+import com.fixmatch.repository.LocationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -38,7 +38,7 @@ public class JobService {
     private ServiceCategoryRepository categoryRepository;
 
     @Autowired
-    private DistrictRepository districtRepository;
+    private LocationRepository locationRepository;
 
     /**
      * Create new job
@@ -46,11 +46,11 @@ public class JobService {
      * Logic:
      * - Validate client exists
      * - Validate category exists
-     * - Validate district exists
+     * - Validate location exists
      * - Set relationships
      * - Save job
      */
-    public Job createJob(Job job, Long clientId, Long categoryId, Long districtId) {
+    public Job createJob(Job job, Long clientId, Long categoryId, Long locationId) {
         // Validate client
         User client = userRepository.findById(clientId)
             .orElseThrow(() -> new RuntimeException("Client not found with id: " + clientId));
@@ -59,14 +59,14 @@ public class JobService {
         ServiceCategory category = categoryRepository.findById(categoryId)
             .orElseThrow(() -> new RuntimeException("Category not found with id: " + categoryId));
         
-        // Validate district
-        District district = districtRepository.findById(districtId)
-            .orElseThrow(() -> new RuntimeException("District not found with id: " + districtId));
+        // Validate location
+        Location location = locationRepository.findById(locationId)
+            .orElseThrow(() -> new RuntimeException("Location not found with id: " + locationId));
         
         // Set relationships
         job.setClient(client);
         job.setCategory(category);
-        job.setDistrict(district);
+        job.setLocation(location);
         job.setStatus(JobStatus.OPEN);
         
         return jobRepository.save(job);

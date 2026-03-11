@@ -28,7 +28,7 @@ public class JobController {
     /**
      * Create new job
      * 
-     * POST /api/jobs?clientId=1&categoryId=1&districtId=1
+     * POST /api/jobs?clientId=1&categoryId=1&locationId=1
      * Body: { "title": "Fix leaking pipe", "description": "...", "budget": 10000 }
      */
     @PostMapping
@@ -36,9 +36,9 @@ public class JobController {
             @RequestBody Job job,
             @RequestParam Long clientId,
             @RequestParam Long categoryId,
-            @RequestParam Long districtId) {
+            @RequestParam Long locationId) {
         try {
-            Job created = jobService.createJob(job, clientId, categoryId, districtId);
+            Job created = jobService.createJob(job, clientId, categoryId, locationId);
             return new ResponseEntity<>(created, HttpStatus.CREATED);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();

@@ -148,7 +148,7 @@ public class UserService {
         // Update fields
         existingUser.setName(updatedUser.getName());
         existingUser.setPhone(updatedUser.getPhone());
-        existingUser.setDistrict(updatedUser.getDistrict());
+        existingUser.setLocation(updatedUser.getLocation());
         
         return userRepository.save(existingUser);
     }

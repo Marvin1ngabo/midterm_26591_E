@@ -60,17 +60,16 @@ public interface ProviderProfileRepository extends JpaRepository<ProviderProfile
      * 
      * This demonstrates complex querying:
      * - Skill filtering (Many-to-Many)
-     * - Province filtering (through User → District → Province)
+     * - Province filtering (through User → Location)
      * - Rating filtering
      * - Verification status
      */
     @Query("SELECT DISTINCT pp FROM ProviderProfile pp " +
            "JOIN pp.skills s " +
            "JOIN pp.user u " +
-           "JOIN u.district d " +
-           "JOIN d.province p " +
+           "JOIN u.location l " +
            "WHERE s.name = :skillName " +
-           "AND p.code = :provinceCode " +
+           "AND l.provinceCode = :provinceCode " +
            "AND pp.rating >= :minRating " +
            "AND pp.verificationStatus = true")
     Page<ProviderProfile> findProvidersBySkillAndProvinceAndRating(
