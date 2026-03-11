@@ -5,20 +5,19 @@ FixMatch is a comprehensive gig management system backend built with Spring Boot
 
 ## 🎯 Assessment Requirements Coverage
 
-### ✅ 1. Entity Relationship Diagram (ERD) - 7 Tables
+### ✅ 1. Entity Relationship Diagram (ERD) - 6 Tables
 
 **Entities Created:**
-1. **Province** - Stores province data (code, name)
-2. **District** - Districts within provinces
-3. **User** - Both clients and service providers
-4. **ProviderProfile** - Extended profile for providers
-5. **ServiceCategory** - Service categories (Plumbing, Cleaning, etc.)
-6. **Job** - Job postings and bookings
-7. **Skill** - Skills that providers possess
+1. **Location** - Single table with complete hierarchy (Province, District, Sector, Cell, Village)
+2. **User** - Both clients and service providers
+3. **ProviderProfile** - Extended profile for providers
+4. **ServiceCategory** - Service categories (Plumbing, Cleaning, etc.)
+5. **Job** - Job postings and bookings
+6. **Skill** - Skills that providers possess
 
 **Relationships:**
-- Province → District (One-to-Many)
-- District → User (One-to-Many)
+- Location → User (One-to-Many)
+- Location → Job (One-to-Many)
 - User → ProviderProfile (One-to-One)
 - ProviderProfile ↔ Skill (Many-to-Many)
 - User → Job (One-to-Many as client)
@@ -27,20 +26,36 @@ FixMatch is a comprehensive gig management system backend built with Spring Boot
 
 ### ✅ 2. Implementation of Saving Location (2 Marks)
 
-**Files:** `Province.java`, `District.java`
+**File:** `Location.java`
 
 **Logic:**
-- Province entity stores province code and name
-- District entity has a Many-to-One relationship with Province
-- When saving a District, the foreign key `province_id` is automatically managed by JPA
-- Cascade operations ensure related entities are saved together
+- Single Location entity stores complete hierarchical data
+- Contains Province (code, name), District, Sector, Cell, and Village information
+- Users and Jobs reference locations via `location_id` foreign key
+- Supports both complete hierarchy and partial location data
 
 **Example:**
 ```java
-Province kigali = new Province("KGL", "Kigali");
-District gasabo = new District("Gasabo");
-gasabo.setProvince(kigali);
-districtRepository.save(gasabo); // Saves both if cascade is enabled
+// Complete hierarchy
+Location kigaliGasabo = new Location("KGL", "Kigali", "Gasabo", "Kimisagara", "Rugenge", "Kiyovu");
+locationRepository.save(kigaliGasabo);
+
+// Partial hierarchy (District level only)
+Location northernMusanze = new Location("NTH", "Northern Province", "Musanze");
+locationRepository.save(northernMusanze);
+```
+
+**Database Structure:**
+```sql
+CREATE TABLE locations (
+    id BIGSERIAL PRIMARY KEY,
+    province_code VARCHAR(10) NOT NULL,
+    province_name VARCHAR(100) NOT NULL,
+    district_name VARCHAR(100) NOT NULL,
+    sector_name VARCHAR(100),
+    cell_name VARCHAR(100),
+    village_name VARCHAR(100)
+);
 ```
 
 ### ✅ 3. Sorting & Pagination (5 Marks)
@@ -111,28 +126,30 @@ private Set<Skill> skills = new HashSet<>();
 
 ### ✅ 5. One-to-Many Relationship (2 Marks)
 
-**Files:** `Province.java`, `District.java`
+**Files:** `Location.java`, `User.java`, `Job.java`
 
-**Relationship:** Province → District (One province has many districts)
+**Relationship:** Location → User, Location → Job (One location has many users and jobs)
 
 **Mapping:**
 ```java
-// In Province.java
-@OneToMany(mappedBy = "province", cascade = CascadeType.ALL)
-private List<District> districts;
-
-// In District.java
+// In User.java
 @ManyToOne
-@JoinColumn(name = "province_id", nullable = false)
-private Province province;
+@JoinColumn(name = "location_id")
+private Location location;
+
+// In Job.java
+@ManyToOne
+@JoinColumn(name = "location_id", nullable = false)
+private Location location;
 ```
 
-**Foreign Key:** `province_id` in `districts` table
+**Foreign Keys:** `location_id` in `users` and `jobs` tables
 
 **Logic:**
-- `mappedBy` indicates District owns the relationship
-- Foreign key is stored in the District table
-- Cascade operations propagate from Province to Districts
+- Multiple users can belong to one location
+- Multiple jobs can be posted in one location
+- Foreign keys are stored in the User and Job tables
+- Single location table eliminates complex joins
 
 ### ✅ 6. One-to-One Relationship (2 Marks)
 
@@ -159,13 +176,17 @@ private User user;
 
 ### ✅ 7. existsBy() Method (2 Marks)
 
-**Files:** `UserRepository.java`, `ProvinceRepository.java`
+**Files:** `UserRepository.java`, `LocationRepository.java`
 
 **Implementation:**
 ```java
+// In UserRepository
 boolean existsByEmail(String email);
 boolean existsByPhone(String phone);
-boolean existsByCode(String code);
+
+// In LocationRepository
+boolean existsByProvinceCode(String provinceCode);
+boolean existsByProvinceCodeAndDistrictName(String provinceCode, String districtName);
 ```
 
 **Logic:**
@@ -176,7 +197,7 @@ boolean existsByCode(String code);
 
 **Use Cases:**
 - Check if email exists during registration
-- Validate province codes
+- Validate province codes and district combinations
 - Prevent duplicate entries
 
 ### ✅ 8. Retrieve Users by Province (4 Marks)
@@ -185,29 +206,32 @@ boolean existsByCode(String code);
 
 **By Province Code:**
 ```java
-@Query("SELECT u FROM User u JOIN u.district d JOIN d.province p WHERE p.code = :provinceCode")
+@Query("SELECT u FROM User u JOIN u.location l WHERE l.provinceCode = :provinceCode")
 List<User> findUsersByProvinceCode(@Param("provinceCode") String provinceCode);
 ```
 
 **By Province Name:**
 ```java
-@Query("SELECT u FROM User u JOIN u.district d JOIN d.province p WHERE p.name = :provinceName")
+@Query("SELECT u FROM User u JOIN u.location l WHERE l.provinceName = :provinceName")
 List<User> findUsersByProvinceName(@Param("provinceName") String provinceName);
 ```
 
 **Query Logic:**
 1. Start from User entity
-2. JOIN with District (User → District)
-3. JOIN with Province (District → Province)
-4. Filter by province code or name
+2. JOIN with Location (User → Location)
+3. Filter by province code or name
 
 **SQL Equivalent:**
 ```sql
 SELECT u.* FROM users u
-JOIN districts d ON u.district_id = d.id
-JOIN provinces p ON d.province_id = p.id
-WHERE p.code = 'KGL';
+JOIN locations l ON u.location_id = l.id
+WHERE l.province_code = 'KGL';
 ```
+
+**Performance Benefits:**
+- Single JOIN instead of multiple JOINs (User → District → Province)
+- Faster query execution with simplified relationship
+- Direct access to province data in location table
 
 ## 🚀 How to Run
 
@@ -220,14 +244,14 @@ WHERE p.code = 'KGL';
 ```bash
 # Using psql
 psql -U postgres
-CREATE DATABASE fixmatch_db;
+CREATE DATABASE Gig_db;
 \q
 ```
 
 ### Configuration
 Edit `application.properties`:
 ```properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/fixmatch_db
+spring.datasource.url=jdbc:postgresql://localhost:5432/Gig_db
 spring.datasource.username=postgres
 spring.datasource.password=your_password
 ```
@@ -286,10 +310,15 @@ Server will start on: `http://localhost:8080`
 - `GET /api/providers/province/{code}` - Get providers by province
 
 ### Locations
-- `GET /api/provinces` - Get all provinces
-- `GET /api/districts` - Get all districts
-- `GET /api/districts/province/{provinceId}` - Get districts by province
-- `POST /api/provinces` - Create new province
+- `GET /api/locations` - Get all locations
+- `GET /api/locations/{id}` - Get location by ID
+- `POST /api/locations` - Create new location
+- `GET /api/locations/provinces` - Get all unique provinces
+- `GET /api/locations/province/{code}` - Get locations by province code
+- `GET /api/locations/province/{code}/districts` - Get districts by province
+- `GET /api/locations/province/{code}/exists` - Check if province exists
+- `GET /api/locations/search` - Search locations by keyword
+- `GET /api/locations/statistics` - Get location statistics
 
 ### Service Categories
 - `GET /api/categories` - Get all service categories
@@ -332,19 +361,35 @@ backend/
 │   ├── entity/
 │   │   ├── User.java
 │   │   ├── ProviderProfile.java
-│   │   ├── Province.java
-│   │   ├── District.java
+│   │   ├── Location.java
 │   │   ├── ServiceCategory.java
 │   │   ├── Job.java
 │   │   └── Skill.java
-│   └── repository/
-│       ├── UserRepository.java
-│       ├── ProviderProfileRepository.java
-│       ├── ProvinceRepository.java
-│       ├── DistrictRepository.java
-│       ├── ServiceCategoryRepository.java
-│       ├── JobRepository.java
-│       └── SkillRepository.java
+│   ├── repository/
+│   │   ├── UserRepository.java
+│   │   ├── ProviderProfileRepository.java
+│   │   ├── LocationRepository.java
+│   │   ├── ServiceCategoryRepository.java
+│   │   ├── JobRepository.java
+│   │   └── SkillRepository.java
+│   ├── service/
+│   │   ├── UserService.java
+│   │   ├── ProviderService.java
+│   │   ├── LocationService.java
+│   │   ├── ServiceCategoryService.java
+│   │   └── JobService.java
+│   ├── controller/
+│   │   ├── UserController.java
+│   │   ├── ProviderController.java
+│   │   ├── LocationController.java
+│   │   ├── ServiceCategoryController.java
+│   │   ├── JobController.java
+│   │   └── ApiDocController.java
+│   ├── config/
+│   │   ├── DataSeeder.java
+│   │   └── WebConfig.java
+│   └── exception/
+│       └── GlobalExceptionHandler.java
 ├── src/main/resources/
 │   └── application.properties
 └── pom.xml
