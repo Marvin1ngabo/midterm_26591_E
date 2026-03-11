@@ -65,16 +65,15 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * REQUIREMENT #8: Retrieve all users from a given province using province CODE
      * 
      * Logic:
-     * - Join User → District → Province
+     * - Join User → Location
      * - Filter by province code
      * 
      * JPQL Query:
      * SELECT u FROM User u 
-     * JOIN u.district d 
-     * JOIN d.province p 
-     * WHERE p.code = :provinceCode
+     * JOIN u.location l 
+     * WHERE l.provinceCode = :provinceCode
      */
-    @Query("SELECT u FROM User u JOIN u.district d JOIN d.province p WHERE p.code = :provinceCode")
+    @Query("SELECT u FROM User u JOIN u.location l WHERE l.provinceCode = :provinceCode")
     List<User> findUsersByProvinceCode(@Param("provinceCode") String provinceCode);
 
     /**
@@ -82,7 +81,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * 
      * Logic: Same as above but filter by province name
      */
-    @Query("SELECT u FROM User u JOIN u.district d JOIN d.province p WHERE p.name = :provinceName")
+    @Query("SELECT u FROM User u JOIN u.location l WHERE l.provinceName = :provinceName")
     List<User> findUsersByProvinceName(@Param("provinceName") String provinceName);
 
     /**
@@ -93,21 +92,21 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * - User type filtering
      * - Pagination
      */
-    @Query("SELECT u FROM User u JOIN u.district d JOIN d.province p " +
-           "WHERE p.code = :provinceCode AND u.userType IN ('PROVIDER', 'BOTH')")
+    @Query("SELECT u FROM User u JOIN u.location l " +
+           "WHERE l.provinceCode = :provinceCode AND u.userType IN ('PROVIDER', 'BOTH')")
     Page<User> findProvidersByProvinceCode(@Param("provinceCode") String provinceCode, Pageable pageable);
 
     /**
      * Find providers by province name with Pagination
      */
-    @Query("SELECT u FROM User u JOIN u.district d JOIN d.province p " +
-           "WHERE p.name = :provinceName AND u.userType IN ('PROVIDER', 'BOTH')")
+    @Query("SELECT u FROM User u JOIN u.location l " +
+           "WHERE l.provinceName = :provinceName AND u.userType IN ('PROVIDER', 'BOTH')")
     Page<User> findProvidersByProvinceName(@Param("provinceName") String provinceName, Pageable pageable);
 
     /**
-     * Find users by district
+     * Find users by location
      */
-    List<User> findByDistrictId(Long districtId);
+    List<User> findByLocationId(Long locationId);
 
     /**
      * Find verified providers with pagination and sorting

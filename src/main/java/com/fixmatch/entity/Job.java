@@ -73,11 +73,11 @@ public class Job {
     private ServiceCategory category;
 
     /**
-     * Many-to-One with District (Job Location)
+     * Many-to-One with Location (Job Location)
      */
     @ManyToOne
-    @JoinColumn(name = "district_id", nullable = false)
-    private District district;
+    @JoinColumn(name = "location_id", nullable = false)
+    private Location location;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -163,9 +163,9 @@ public class Job {
      * Get job location as string
      */
     public String getJobLocation() {
-        if (district != null && district.getProvince() != null) {
-            return district.getName() + ", " + district.getProvince().getName();
+        if (location != null) {
+            return location.getFullAddress();
         }
-        return district != null ? district.getName() : "Location not set";
+        return "Location not set";
     }
 }

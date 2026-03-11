@@ -56,12 +56,12 @@ public class User {
     private UserType userType;
 
     /**
-     * Many-to-One Relationship with District
-     * - Many users can belong to one district
+     * Many-to-One Relationship with Location
+     * - Many users can belong to one location
      */
     @ManyToOne
-    @JoinColumn(name = "district_id")
-    private District district;
+    @JoinColumn(name = "location_id")
+    private Location location;
 
     /**
      * One-to-One Relationship with ProviderProfile
@@ -110,13 +110,13 @@ public class User {
     }
 
     /**
-     * Get full location string (District, Province)
+     * Get full location string (Village, Cell, Sector, District, Province)
      */
     public String getFullLocation() {
-        if (district != null && district.getProvince() != null) {
-            return district.getName() + ", " + district.getProvince().getName();
+        if (location != null) {
+            return location.getFullAddress();
         }
-        return district != null ? district.getName() : "Location not set";
+        return "Location not set";
     }
 
     /**
@@ -126,6 +126,6 @@ public class User {
         return name != null && !name.trim().isEmpty() &&
                email != null && !email.trim().isEmpty() &&
                phone != null && !phone.trim().isEmpty() &&
-               district != null;
+               location != null;
     }
 }

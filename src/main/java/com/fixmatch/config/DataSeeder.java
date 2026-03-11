@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
-import java.util.Arrays;
 
 /**
  * DataSeeder - Populates database with sample data on application startup
@@ -18,10 +17,7 @@ import java.util.Arrays;
 public class DataSeeder implements CommandLineRunner {
 
     @Autowired
-    private ProvinceRepository provinceRepository;
-
-    @Autowired
-    private DistrictRepository districtRepository;
+    private LocationRepository locationRepository;
 
     @Autowired
     private UserRepository userRepository;
@@ -41,46 +37,46 @@ public class DataSeeder implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         // Check if data already exists
-        if (provinceRepository.count() > 0) {
+        if (locationRepository.count() > 0) {
             System.out.println("✅ Database already seeded. Skipping...");
             return;
         }
 
         System.out.println("🌱 Seeding database with sample data...");
 
-        // 1. Seed Provinces
-        Province kigali = provinceRepository.save(new Province("KGL", "Kigali"));
-        Province eastern = provinceRepository.save(new Province("EST", "Eastern Province"));
-        Province western = provinceRepository.save(new Province("WST", "Western Province"));
-        Province northern = provinceRepository.save(new Province("NTH", "Northern Province"));
-        Province southern = provinceRepository.save(new Province("STH", "Southern Province"));
+        // 1. Seed Locations (Province, District, Sector, Cell, Village hierarchy)
+        Location kigaliGasabo = locationRepository.save(new Location(
+            "KGL", "Kigali", "Gasabo", "Kimisagara", "Rugenge", "Kiyovu"
+        ));
         
-        System.out.println("✅ Provinces seeded: 5");
+        Location kigaliKicukiro = locationRepository.save(new Location(
+            "KGL", "Kigali", "Kicukiro", "Nyamirambo", "Nyakabanda", "Kimihurura"
+        ));
+        
+        Location kigaliNyarugenge = locationRepository.save(new Location(
+            "KGL", "Kigali", "Nyarugenge", "Muhima", "Rugenge", "Kacyiru"
+        ));
+        
+        Location easternRwamagana = locationRepository.save(new Location(
+            "EST", "Eastern Province", "Rwamagana", "Rwamagana", "Nyakariro", "Nyakariro"
+        ));
+        
+        Location westernKarongi = locationRepository.save(new Location(
+            "WST", "Western Province", "Karongi", "Bwishyura", "Bwishyura", "Bwishyura"
+        ));
 
-        // 2. Seed Districts
-        District gasabo = new District("Gasabo");
-        gasabo.setProvince(kigali);
-        districtRepository.save(gasabo);
+        // Add some locations with partial hierarchy (District level only)
+        Location northernMusanze = locationRepository.save(new Location(
+            "NTH", "Northern Province", "Musanze"
+        ));
+        
+        Location southernHuye = locationRepository.save(new Location(
+            "STH", "Southern Province", "Huye"
+        ));
 
-        District kicukiro = new District("Kicukiro");
-        kicukiro.setProvince(kigali);
-        districtRepository.save(kicukiro);
+        System.out.println("✅ Locations seeded: 7");
 
-        District nyarugenge = new District("Nyarugenge");
-        nyarugenge.setProvince(kigali);
-        districtRepository.save(nyarugenge);
-
-        District rwamagana = new District("Rwamagana");
-        rwamagana.setProvince(eastern);
-        districtRepository.save(rwamagana);
-
-        District karongi = new District("Karongi");
-        karongi.setProvince(western);
-        districtRepository.save(karongi);
-
-        System.out.println("✅ Districts seeded: 5");
-
-        // 3. Seed Service Categories
+        // 2. Seed Service Categories
         ServiceCategory plumbing = categoryRepository.save(
             new ServiceCategory("Plumbing", "Wrench", "Professional plumbing services")
         );
@@ -99,7 +95,7 @@ public class DataSeeder implements CommandLineRunner {
 
         System.out.println("✅ Service Categories seeded: 5");
 
-        // 4. Seed Skills
+        // 3. Seed Skills
         Skill pipeRepair = skillRepository.save(new Skill("Pipe Repair", "Fix leaking and broken pipes"));
         Skill houseCleaning = skillRepository.save(new Skill("House Cleaning", "Deep cleaning services"));
         Skill electricalWiring = skillRepository.save(new Skill("Electrical Wiring", "Install and repair wiring"));
@@ -108,14 +104,14 @@ public class DataSeeder implements CommandLineRunner {
 
         System.out.println("✅ Skills seeded: 5");
 
-        // 5. Seed Users (Clients)
+        // 4. Seed Users (Clients)
         User client1 = new User();
         client1.setName("Jean Uwimana");
         client1.setEmail("jean@example.com");
         client1.setPassword("password123");
         client1.setPhone("0781234567");
         client1.setUserType(UserType.CLIENT);
-        client1.setDistrict(gasabo);
+        client1.setLocation(kigaliGasabo);
         userRepository.save(client1);
 
         User client2 = new User();
@@ -124,19 +120,19 @@ public class DataSeeder implements CommandLineRunner {
         client2.setPassword("password123");
         client2.setPhone("0782345678");
         client2.setUserType(UserType.CLIENT);
-        client2.setDistrict(kicukiro);
+        client2.setLocation(kigaliKicukiro);
         userRepository.save(client2);
 
         System.out.println("✅ Clients seeded: 2");
 
-        // 6. Seed Users (Providers)
+        // 5. Seed Users (Providers)
         User provider1 = new User();
         provider1.setName("Patrick Nkurunziza");
         provider1.setEmail("patrick@example.com");
         provider1.setPassword("password123");
         provider1.setPhone("0783456789");
         provider1.setUserType(UserType.PROVIDER);
-        provider1.setDistrict(gasabo);
+        provider1.setLocation(kigaliGasabo);
         userRepository.save(provider1);
 
         User provider2 = new User();
@@ -145,7 +141,7 @@ public class DataSeeder implements CommandLineRunner {
         provider2.setPassword("password123");
         provider2.setPhone("0784567890");
         provider2.setUserType(UserType.PROVIDER);
-        provider2.setDistrict(nyarugenge);
+        provider2.setLocation(kigaliNyarugenge);
         userRepository.save(provider2);
 
         User provider3 = new User();
@@ -154,12 +150,12 @@ public class DataSeeder implements CommandLineRunner {
         provider3.setPassword("password123");
         provider3.setPhone("0785678901");
         provider3.setUserType(UserType.PROVIDER);
-        provider3.setDistrict(kicukiro);
+        provider3.setLocation(kigaliKicukiro);
         userRepository.save(provider3);
 
         System.out.println("✅ Providers seeded: 3");
 
-        // 7. Seed Provider Profiles (One-to-One relationship)
+        // 6. Seed Provider Profiles (One-to-One relationship)
         ProviderProfile profile1 = new ProviderProfile();
         profile1.setUser(provider1);
         profile1.setBio("Experienced plumber with 10 years of experience");
@@ -205,7 +201,7 @@ public class DataSeeder implements CommandLineRunner {
 
         System.out.println("✅ Provider Profiles seeded: 3");
 
-        // 8. Seed Jobs
+        // 7. Seed Jobs
         Job job1 = new Job();
         job1.setTitle("Fix leaking kitchen sink");
         job1.setDescription("My kitchen sink has been leaking for 2 days. Need urgent repair.");
@@ -213,7 +209,7 @@ public class DataSeeder implements CommandLineRunner {
         job1.setStatus(JobStatus.OPEN);
         job1.setClient(client1);
         job1.setCategory(plumbing);
-        job1.setDistrict(gasabo);
+        job1.setLocation(kigaliGasabo);
         jobRepository.save(job1);
 
         Job job2 = new Job();
@@ -224,7 +220,7 @@ public class DataSeeder implements CommandLineRunner {
         job2.setClient(client2);
         job2.setProvider(provider2);
         job2.setCategory(cleaning);
-        job2.setDistrict(kicukiro);
+        job2.setLocation(kigaliKicukiro);
         jobRepository.save(job2);
 
         Job job3 = new Job();
@@ -234,7 +230,7 @@ public class DataSeeder implements CommandLineRunner {
         job3.setStatus(JobStatus.OPEN);
         job3.setClient(client1);
         job3.setCategory(electrical);
-        job3.setDistrict(gasabo);
+        job3.setLocation(kigaliGasabo);
         jobRepository.save(job3);
 
         Job job4 = new Job();
@@ -245,15 +241,14 @@ public class DataSeeder implements CommandLineRunner {
         job4.setClient(client2);
         job4.setProvider(provider1);
         job4.setCategory(painting);
-        job4.setDistrict(kicukiro);
+        job4.setLocation(kigaliKicukiro);
         jobRepository.save(job4);
 
         System.out.println("✅ Jobs seeded: 4");
 
         System.out.println("\n🎉 Database seeding completed successfully!");
         System.out.println("📊 Summary:");
-        System.out.println("   - Provinces: 5");
-        System.out.println("   - Districts: 5");
+        System.out.println("   - Locations: 7 (with complete hierarchy)");
         System.out.println("   - Categories: 5");
         System.out.println("   - Skills: 5");
         System.out.println("   - Clients: 2");

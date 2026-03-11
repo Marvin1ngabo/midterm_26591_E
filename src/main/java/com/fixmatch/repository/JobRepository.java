@@ -41,21 +41,21 @@ public interface JobRepository extends JpaRepository<Job, Long> {
     /**
      * Find jobs by province code
      */
-    @Query("SELECT j FROM Job j JOIN j.district d JOIN d.province p WHERE p.code = :provinceCode")
+    @Query("SELECT j FROM Job j JOIN j.location l WHERE l.provinceCode = :provinceCode")
     List<Job> findJobsByProvinceCode(@Param("provinceCode") String provinceCode);
 
     /**
      * Find jobs by province code with Pagination
      */
-    @Query("SELECT j FROM Job j JOIN j.district d JOIN d.province p WHERE p.code = :provinceCode")
+    @Query("SELECT j FROM Job j JOIN j.location l WHERE l.provinceCode = :provinceCode")
     Page<Job> findJobsByProvinceCode(@Param("provinceCode") String provinceCode, Pageable pageable);
 
     /**
      * Find open jobs by category and province
      */
-    @Query("SELECT j FROM Job j JOIN j.district d JOIN d.province p " +
+    @Query("SELECT j FROM Job j JOIN j.location l " +
            "WHERE j.category.id = :categoryId " +
-           "AND p.code = :provinceCode " +
+           "AND l.provinceCode = :provinceCode " +
            "AND j.status = 'OPEN'")
     Page<Job> findOpenJobsByCategoryAndProvince(
         @Param("categoryId") Long categoryId,
@@ -107,9 +107,9 @@ public interface JobRepository extends JpaRepository<Job, Long> {
     List<Job> findRecentJobs(@Param("sinceDate") java.time.LocalDateTime sinceDate);
 
     /**
-     * Find jobs by district
+     * Find jobs by location
      */
-    Page<Job> findByDistrictId(Long districtId, Pageable pageable);
+    Page<Job> findByLocationId(Long locationId, Pageable pageable);
 
     /**
      * Find high-budget jobs (above specified amount)
@@ -126,6 +126,6 @@ public interface JobRepository extends JpaRepository<Job, Long> {
     /**
      * Get job statistics by province
      */
-    @Query("SELECT p.name, COUNT(j) FROM Job j JOIN j.district d JOIN d.province p GROUP BY p.name")
+    @Query("SELECT l.provinceName, COUNT(j) FROM Job j JOIN j.location l GROUP BY l.provinceName")
     List<Object[]> getJobStatsByProvince();
 }

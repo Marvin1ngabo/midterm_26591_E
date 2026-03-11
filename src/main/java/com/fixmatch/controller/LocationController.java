@@ -1,7 +1,6 @@
 package com.fixmatch.controller;
 
-import com.fixmatch.entity.District;
-import com.fixmatch.entity.Province;
+import com.fixmatch.entity.Location;
 import com.fixmatch.service.LocationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -13,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * LocationController - REST API endpoints for Province and District
+ * LocationController - REST API endpoints for Location entity
  * 
  * Base URL: /api/locations
  */
@@ -26,15 +25,15 @@ public class LocationController {
     private LocationService locationService;
 
     /**
-     * REQUIREMENT #2: Save Province
+     * REQUIREMENT #2: Save Location
      * 
-     * POST /api/locations/provinces
-     * Body: { "code": "KGL", "name": "Kigali" }
+     * POST /api/locations
+     * Body: { "provinceCode": "KGL", "provinceName": "Kigali", "districtName": "Gasabo", "sectorName": "Kimisagara", "cellName": "Rugenge", "villageName": "Kiyovu" }
      */
-    @PostMapping("/provinces")
-    public ResponseEntity<Province> createProvince(@RequestBody Province province) {
+    @PostMapping
+    public ResponseEntity<Location> createLocation(@RequestBody Location location) {
         try {
-            Province saved = locationService.saveProvince(province);
+            Location saved = locationService.saveLocation(location);
             return new ResponseEntity<>(saved, HttpStatus.CREATED);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
@@ -42,84 +41,158 @@ public class LocationController {
     }
 
     /**
-     * Get all provinces
+     * Get all locations
      * 
-     * GET /api/locations/provinces
+     * GET /api/locations
      */
-    @GetMapping("/provinces")
-    public ResponseEntity<List<Province>> getAllProvinces() {
-        List<Province> provinces = locationService.getAllProvinces();
-        return ResponseEntity.ok(provinces);
+    @GetMapping
+    public ResponseEntity<List<Location>> getAllLocations() {
+        List<Location> locations = locationService.getAllLocations();
+        return ResponseEntity.ok(locations);
     }
 
     /**
-     * Get province by code
+     * Get location by ID
      * 
-     * GET /api/locations/provinces/code/{code}
+     * GET /api/locations/{id}
      */
-    @GetMapping("/provinces/code/{code}")
-    public ResponseEntity<Province> getProvinceByCode(@PathVariable String code) {
+    @GetMapping("/{id}")
+    public ResponseEntity<Location> getLocationById(@PathVariable Long id) {
         try {
-            Province province = locationService.getProvinceByCode(code);
-            return ResponseEntity.ok(province);
+            Location location = locationService.getLocationById(id);
+            return ResponseEntity.ok(location);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
     }
 
     /**
+     * Get all unique provinces
+     * 
+     * GET /api/locations/provinces
+     */
+    @GetMapping("/provinces")
+    public ResponseEntity<List<Object[]>> getAllProvinces() {
+        List<Object[]> provinces = locationService.getAllProvinces();
+        return ResponseEntity.ok(provinces);
+    }
+
+    /**
+     * Get locations by province code
+     * 
+     * GET /api/locations/province/{code}
+     */
+    @GetMapping("/province/{code}")
+    public ResponseEntity<List<Location>> getLocationsByProvinceCode(@PathVariable String code) {
+        List<Location> locations = locationService.getLocationsByProvinceCode(code);
+        return ResponseEntity.ok(locations);
+    }
+
+    /**
+     * REQUIREMENT #3: Get locations by province with Pagination
+     * 
+     * GET /api/locations/province/{code}/paginated?page=0&size=10
+     */
+    @GetMapping("/province/{code}/paginated")
+    public ResponseEntity<Page<Location>> getLocationsByProvinceCodePageable(
+            @PathVariable String code,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Location> locations = locationService.getLocationsByProvinceCode(code, pageable);
+        return ResponseEntity.ok(locations);
+    }
+
+    /**
+     * Get districts by province code
+     * 
+     * GET /api/locations/province/{code}/districts
+     */
+    @GetMapping("/province/{code}/districts")
+    public ResponseEntity<List<String>> getDistrictsByProvinceCode(@PathVariable String code) {
+        List<String> districts = locationService.getDistrictsByProvinceCode(code);
+        return ResponseEntity.ok(districts);
+    }
+
+    /**
+     * Get sectors by province and district
+     * 
+     * GET /api/locations/province/{code}/district/{district}/sectors
+     */
+    @GetMapping("/province/{code}/district/{district}/sectors")
+    public ResponseEntity<List<String>> getSectorsByProvinceAndDistrict(
+            @PathVariable String code, 
+            @PathVariable String district) {
+        List<String> sectors = locationService.getSectorsByProvinceAndDistrict(code, district);
+        return ResponseEntity.ok(sectors);
+    }
+
+    /**
      * REQUIREMENT #7: Check if province exists
      * 
-     * GET /api/locations/provinces/exists/{code}
+     * GET /api/locations/province/{code}/exists
      */
-    @GetMapping("/provinces/exists/{code}")
+    @GetMapping("/province/{code}/exists")
     public ResponseEntity<Boolean> provinceExists(@PathVariable String code) {
         boolean exists = locationService.provinceExists(code);
         return ResponseEntity.ok(exists);
     }
 
     /**
-     * REQUIREMENT #2: Save District
+     * REQUIREMENT #7: Check if district exists in province
      * 
-     * POST /api/locations/districts?provinceId=1
-     * Body: { "name": "Gasabo" }
+     * GET /api/locations/province/{code}/district/{district}/exists
      */
-    @PostMapping("/districts")
-    public ResponseEntity<District> createDistrict(
-            @RequestBody District district,
-            @RequestParam Long provinceId) {
-        try {
-            District saved = locationService.saveDistrict(district, provinceId);
-            return new ResponseEntity<>(saved, HttpStatus.CREATED);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-        }
+    @GetMapping("/province/{code}/district/{district}/exists")
+    public ResponseEntity<Boolean> districtExistsInProvince(
+            @PathVariable String code, 
+            @PathVariable String district) {
+        boolean exists = locationService.districtExistsInProvince(code, district);
+        return ResponseEntity.ok(exists);
     }
 
     /**
-     * Get districts by province (without pagination)
+     * Get locations by level
      * 
-     * GET /api/locations/provinces/{provinceId}/districts
+     * GET /api/locations/level/{level}
      */
-    @GetMapping("/provinces/{provinceId}/districts")
-    public ResponseEntity<List<District>> getDistrictsByProvince(@PathVariable Long provinceId) {
-        List<District> districts = locationService.getDistrictsByProvince(provinceId);
-        return ResponseEntity.ok(districts);
+    @GetMapping("/level/{level}")
+    public ResponseEntity<List<Location>> getLocationsByLevel(@PathVariable String level) {
+        List<Location> locations = locationService.getLocationsByLevel(level);
+        return ResponseEntity.ok(locations);
     }
 
     /**
-     * REQUIREMENT #3: Get districts by province with Pagination
+     * Search locations by keyword
      * 
-     * GET /api/locations/provinces/{provinceId}/districts/paginated?page=0&size=10
+     * GET /api/locations/search?keyword=gasabo
      */
-    @GetMapping("/provinces/{provinceId}/districts/paginated")
-    public ResponseEntity<Page<District>> getDistrictsByProvincePageable(
-            @PathVariable Long provinceId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        
-        Pageable pageable = PageRequest.of(page, size);
-        Page<District> districts = locationService.getDistrictsByProvince(provinceId, pageable);
-        return ResponseEntity.ok(districts);
+    @GetMapping("/search")
+    public ResponseEntity<List<Location>> searchLocations(@RequestParam String keyword) {
+        List<Location> locations = locationService.searchLocations(keyword);
+        return ResponseEntity.ok(locations);
+    }
+
+    /**
+     * Get location statistics
+     * 
+     * GET /api/locations/statistics
+     */
+    @GetMapping("/statistics")
+    public ResponseEntity<LocationService.LocationStatistics> getLocationStatistics() {
+        LocationService.LocationStatistics stats = locationService.getLocationStatistics();
+        return ResponseEntity.ok(stats);
+    }
+
+    /**
+     * Get complete hierarchy locations
+     * 
+     * GET /api/locations/complete
+     */
+    @GetMapping("/complete")
+    public ResponseEntity<List<Location>> getCompleteHierarchyLocations() {
+        List<Location> locations = locationService.getCompleteHierarchyLocations();
+        return ResponseEntity.ok(locations);
     }
 }

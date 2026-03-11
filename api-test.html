@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FixMatch API Tester</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header { text-align: center; color: #2c3e50; margin-bottom: 30px; }
+        .test-section { margin-bottom: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 5px; }
+        .test-section h3 { color: #34495e; margin-top: 0; }
+        button { background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #2980b9; }
+        .result { background: #f8f9fa; border: 1px solid #dee2e6; padding: 15px; margin-top: 10px; border-radius: 5px; white-space: pre-wrap; font-family: monospace; max-height: 300px; overflow-y: auto; }
+        .success { border-color: #28a745; background-color: #d4edda; }
+        .error { border-color: #dc3545; background-color: #f8d7da; }
+        .input-group { margin: 10px 0; }
+        input, select { padding: 8px; margin: 5px; border: 1px solid #ddd; border-radius: 3px; }
+        .status { font-weight: bold; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 FixMatch API Tester</h1>
+            <p>Test all FixMatch backend endpoints</p>
+            <div id="server-status">
+                <button onclick="checkServerStatus()">Check Server Status</button>
+                <div id="status-result"></div>
+            </div>
+        </div>
+
+        <!-- API Documentation -->
+        <div class="test-section">
+            <h3>📚 API Documentation</h3>
+            <button onclick="getApiDocs()">Get API Documentation</button>
+            <button onclick="getHealthCheck()">Health Check</button>
+            <div id="docs-result" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- Location Testing -->
+        <div class="test-section">
+            <h3>🌍 Location Management (Assessment Requirement #2)</h3>
+            <p><strong>Tests:</strong> Foreign key relationships, Province → District mapping</p>
+            <button onclick="getProvinces()">Get All Provinces</button>
+            <button onclick="getDistricts()">Get All Districts</button>
+            <button onclick="createSampleLocation()">Create Sample Province & District</button>
+            <div id="location-result" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- User Management -->
+        <div class="test-section">
+            <h3>👥 User Management (Requirements #3, #7, #8)</h3>
+            <p><strong>Tests:</strong> Pagination, Sorting, existsBy(), Province queries</p>
+            
+            <div class="input-group">
+                <label>Sort by:</label>
+                <select id="userSortBy">
+                    <option value="name">Name</option>
+                    <option value="email">Email</option>
+                    <option value="createdAt">Created Date</option>
+                </select>
+                <select id="userSortDirection">
+                    <option value="asc">Ascending</option>
+                    <option value="desc">Descending</option>
+                </select>
+                <button onclick="getUsersWithSorting()">Get Users (Sorted)</button>
+            </div>
+
+            <div class="input-group">
+                <label>Pagination:</label>
+                <input type="number" id="userPage" placeholder="Page (0)" value="0" min="0">
+                <input type="number" id="userSize" placeholder="Size (10)" value="10" min="1">
+                <button onclick="getUsersWithPagination()">Get Users (Paginated)</button>
+            </div>
+
+            <div class="input-group">
+                <label>Province Query:</label>
+                <input type="text" id="provinceCode" placeholder="Province Code (e.g., KGL)">
+                <button onclick="getUsersByProvince()">Get Users by Province</button>
+            </div>
+
+            <div class="input-group">
+                <label>Check Existence:</label>
+                <input type="email" id="checkEmail" placeholder="Email to check">
+                <button onclick="checkEmailExists()">Check Email Exists</button>
+            </div>
+
+            <button onclick="createSampleUser()">Create Sample User</button>
+            <button onclick="getUserStatistics()">Get User Statistics</button>
+            
+            <div id="user-result" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- Job Management -->
+        <div class="test-section">
+            <h3>💼 Job Management (Requirements #3, #4, #5, #6)</h3>
+            <p><strong>Tests:</strong> Many-to-Many, One-to-Many, One-to-One relationships</p>
+            
+            <div class="input-group">
+                <label>Job Status:</label>
+                <select id="jobStatus">
+                    <option value="OPEN">Open</option>
+                    <option value="IN_PROGRESS">In Progress</option>
+                    <option value="COMPLETED">Completed</option>
+                    <option value="CANCELLED">Cancelled</option>
+                </select>
+                <button onclick="getJobsByStatus()">Get Jobs by Status</button>
+            </div>
+
+            <button onclick="getAvailableJobs()">Get Available Jobs</button>
+            <button onclick="getJobStatistics()">Get Job Statistics</button>
+            <button onclick="createSampleJob()">Create Sample Job</button>
+            
+            <div id="job-result" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- Provider Testing -->
+        <div class="test-section">
+            <h3>🔧 Provider Management (Many-to-Many Relationship)</h3>
+            <p><strong>Tests:</strong> ProviderProfile ↔ Skill Many-to-Many relationship</p>
+            
+            <div class="input-group">
+                <label>Skill Name:</label>
+                <input type="text" id="skillName" placeholder="Skill (e.g., Plumbing)">
+                <button onclick="getProvidersBySkill()">Get Providers by Skill</button>
+            </div>
+
+            <button onclick="getVerifiedProviders()">Get Verified Providers</button>
+            <button onclick="createSampleProvider()">Create Sample Provider with Skills</button>
+            
+            <div id="provider-result" class="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const BASE_URL = 'http://localhost:8080/api';
+
+        async function makeRequest(url, method = 'GET', body = null) {
+            try {
+                const options = {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                };
+                
+                if (body) {
+                    options.body = JSON.stringify(body);
+                }
+
+                const response = await fetch(url, options);
+                const data = await response.json();
+                
+                return {
+                    success: response.ok,
+                    status: response.status,
+                    data: data
+                };
+            } catch (error) {
+                return {
+                    success: false,
+                    status: 0,
+                    data: { error: error.message }
+                };
+            }
+        }
+
+        function displayResult(elementId, result) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.className = `result ${result.success ? 'success' : 'error'}`;
+            
+            const statusText = result.success ? 'SUCCESS' : 'ERROR';
+            element.innerHTML = `<div class="status">Status: ${statusText} (${result.status})</div>${JSON.stringify(result.data, null, 2)}`;
+        }
+
+        // Server Status
+        async function checkServerStatus() {
+            const result = await makeRequest(`${BASE_URL}/health`);
+            displayResult('status-result', result);
+        }
+
+        // API Documentation
+        async function getApiDocs() {
+            const result = await makeRequest(`${BASE_URL}`);
+            displayResult('docs-result', result);
+        }
+
+        async function getHealthCheck() {
+            const result = await makeRequest(`${BASE_URL}/health`);
+            displayResult('docs-result', result);
+        }
+
+        // Location Tests
+        async function getProvinces() {
+            const result = await makeRequest(`${BASE_URL}/provinces`);
+            displayResult('location-result', result);
+        }
+
+        async function getDistricts() {
+            const result = await makeRequest(`${BASE_URL}/districts`);
+            displayResult('location-result', result);
+        }
+
+        async function createSampleLocation() {
+            // First create province
+            const province = {
+                code: "TST",
+                name: "Test Province"
+            };
+            
+            const provinceResult = await makeRequest(`${BASE_URL}/provinces`, 'POST', province);
+            
+            if (provinceResult.success) {
+                // Then create district
+                const district = {
+                    name: "Test District",
+                    provinceId: provinceResult.data.id
+                };
+                
+                const districtResult = await makeRequest(`${BASE_URL}/districts`, 'POST', district);
+                displayResult('location-result', {
+                    success: true,
+                    status: 201,
+                    data: {
+                        province: provinceResult.data,
+                        district: districtResult.data,
+                        message: "Province and District created with foreign key relationship!"
+                    }
+                });
+            } else {
+                displayResult('location-result', provinceResult);
+            }
+        }
+
+        // User Tests
+        async function getUsersWithSorting() {
+            const sortBy = document.getElementById('userSortBy').value;
+            const direction = document.getElementById('userSortDirection').value;
+            const result = await makeRequest(`${BASE_URL}/users?sortBy=${sortBy}&direction=${direction}`);
+            displayResult('user-result', result);
+        }
+
+        async function getUsersWithPagination() {
+            const page = document.getElementById('userPage').value;
+            const size = document.getElementById('userSize').value;
+            const result = await makeRequest(`${BASE_URL}/users/type/PROVIDER?page=${page}&size=${size}`);
+            displayResult('user-result', result);
+        }
+
+        async function getUsersByProvince() {
+            const code = document.getElementById('provinceCode').value;
+            if (!code) {
+                alert('Please enter a province code');
+                return;
+            }
+            const result = await makeRequest(`${BASE_URL}/users/province/code/${code}`);
+            displayResult('user-result', result);
+        }
+
+        async function checkEmailExists() {
+            const email = document.getElementById('checkEmail').value;
+            if (!email) {
+                alert('Please enter an email');
+                return;
+            }
+            const result = await makeRequest(`${BASE_URL}/users/exists/email?email=${email}`);
+            displayResult('user-result', result);
+        }
+
+        async function createSampleUser() {
+            const user = {
+                name: "John Doe",
+                email: `test${Date.now()}@example.com`,
+                password: "password123",
+                phone: `078${Math.floor(Math.random() * 1000000)}`,
+                userType: "PROVIDER"
+            };
+            
+            const result = await makeRequest(`${BASE_URL}/users/register`, 'POST', user);
+            displayResult('user-result', result);
+        }
+
+        async function getUserStatistics() {
+            const result = await makeRequest(`${BASE_URL}/users/statistics`);
+            displayResult('user-result', result);
+        }
+
+        // Job Tests
+        async function getJobsByStatus() {
+            const status = document.getElementById('jobStatus').value;
+            const result = await makeRequest(`${BASE_URL}/jobs/status/${status}?page=0&size=10`);
+            displayResult('job-result', result);
+        }
+
+        async function getAvailableJobs() {
+            const result = await makeRequest(`${BASE_URL}/jobs/available?page=0&size=10`);
+            displayResult('job-result', result);
+        }
+
+        async function getJobStatistics() {
+            const result = await makeRequest(`${BASE_URL}/jobs/statistics`);
+            displayResult('job-result', result);
+        }
+
+        async function createSampleJob() {
+            const job = {
+                title: "Fix Leaking Pipe",
+                description: "Need urgent plumbing repair",
+                budget: 15000
+            };
+            
+            const result = await makeRequest(`${BASE_URL}/jobs?clientId=1&categoryId=1&districtId=1`, 'POST', job);
+            displayResult('job-result', result);
+        }
+
+        // Provider Tests
+        async function getProvidersBySkill() {
+            const skill = document.getElementById('skillName').value;
+            if (!skill) {
+                alert('Please enter a skill name');
+                return;
+            }
+            const result = await makeRequest(`${BASE_URL}/users/providers/skill/${skill}`);
+            displayResult('provider-result', result);
+        }
+
+        async function getVerifiedProviders() {
+            const result = await makeRequest(`${BASE_URL}/users/providers/verified?page=0&size=10`);
+            displayResult('provider-result', result);
+        }
+
+        async function createSampleProvider() {
+            const provider = {
+                bio: "Experienced plumber with 5 years experience",
+                hourlyRate: 5000,
+                yearsExperience: 5,
+                verificationStatus: true
+            };
+            
+            const result = await makeRequest(`${BASE_URL}/providers`, 'POST', provider);
+            displayResult('provider-result', result);
+        }
+
+        // Auto-check server status on load
+        window.onload = function() {
+            checkServerStatus();
+        };
+    </script>
+</body>
+</html>
