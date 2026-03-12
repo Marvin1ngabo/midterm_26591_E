@@ -120,6 +120,69 @@ public class UserController {
     }
 
     /**
+     * Get users by district name
+     * 
+     * GET /api/users/district/name/Gasabo
+     */
+    @GetMapping("/district/name/{name}")
+    public ResponseEntity<List<User>> getUsersByDistrictName(@PathVariable String name) {
+        List<User> users = userService.getUsersByDistrictName(name);
+        return ResponseEntity.ok(users);
+    }
+
+    /**
+     * Get users by sector name
+     * 
+     * GET /api/users/sector/name/Kimisagara
+     */
+    @GetMapping("/sector/name/{name}")
+    public ResponseEntity<List<User>> getUsersBySectorName(@PathVariable String name) {
+        List<User> users = userService.getUsersBySectorName(name);
+        return ResponseEntity.ok(users);
+    }
+
+    /**
+     * Get users by cell name
+     * 
+     * GET /api/users/cell/name/Rugenge
+     */
+    @GetMapping("/cell/name/{name}")
+    public ResponseEntity<List<User>> getUsersByCellName(@PathVariable String name) {
+        List<User> users = userService.getUsersByCellName(name);
+        return ResponseEntity.ok(users);
+    }
+
+    /**
+     * Get users by village name
+     * 
+     * GET /api/users/village/name/Kiyovu
+     */
+    @GetMapping("/village/name/{name}")
+    public ResponseEntity<List<User>> getUsersByVillageName(@PathVariable String name) {
+        List<User> users = userService.getUsersByVillageName(name);
+        return ResponseEntity.ok(users);
+    }
+
+    /**
+     * Get users by location hierarchy
+     * 
+     * GET /api/users/location?provinceCode=KGL&districtName=Gasabo&sectorName=Kimisagara&cellName=Rugenge&villageName=Kiyovu
+     */
+    @GetMapping("/location")
+    public ResponseEntity<List<User>> getUsersByLocationHierarchy(
+            @RequestParam String provinceCode,
+            @RequestParam String districtName,
+            @RequestParam(required = false) String sectorName,
+            @RequestParam(required = false) String cellName,
+            @RequestParam(required = false) String villageName) {
+        
+        List<User> users = userService.getUsersByLocationHierarchy(
+            provinceCode, districtName, sectorName, cellName, villageName
+        );
+        return ResponseEntity.ok(users);
+    }
+
+    /**
      * Get providers by province with Pagination
      * 
      * GET /api/users/providers/province/KGL?page=0&size=10

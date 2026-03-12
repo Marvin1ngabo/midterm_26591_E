@@ -114,6 +114,49 @@ public class UserService {
     }
 
     /**
+     * Get users by district name
+     */
+    public List<User> getUsersByDistrictName(String districtName) {
+        return userRepository.findUsersByDistrictName(districtName);
+    }
+
+    /**
+     * Get users by sector name
+     */
+    public List<User> getUsersBySectorName(String sectorName) {
+        return userRepository.findUsersBySectorName(sectorName);
+    }
+
+    /**
+     * Get users by cell name
+     */
+    public List<User> getUsersByCellName(String cellName) {
+        return userRepository.findUsersByCellName(cellName);
+    }
+
+    /**
+     * Get users by village name
+     */
+    public List<User> getUsersByVillageName(String villageName) {
+        return userRepository.findUsersByVillageName(villageName);
+    }
+
+    /**
+     * Get users by complete location hierarchy
+     * 
+     * This allows querying by any combination of location levels:
+     * - Province + District (required)
+     * - Province + District + Sector (optional)
+     * - Province + District + Sector + Cell (optional)
+     * - Province + District + Sector + Cell + Village (optional)
+     */
+    public List<User> getUsersByLocationHierarchy(String provinceCode, String districtName, 
+                                                 String sectorName, String cellName, String villageName) {
+        return userRepository.findUsersByLocationHierarchy(provinceCode, districtName, 
+                                                          sectorName, cellName, villageName);
+    }
+
+    /**
      * Get providers by province with Pagination
      * 
      * Combines:

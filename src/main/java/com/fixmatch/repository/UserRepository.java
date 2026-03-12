@@ -153,4 +153,45 @@ public interface UserRepository extends JpaRepository<User, Long> {
      */
     @Query("SELECT u FROM User u WHERE LOWER(u.name) LIKE LOWER(CONCAT('%', :name, '%'))")
     List<User> searchByName(@Param("name") String name);
+
+    /**
+     * Find users by district name
+     */
+    @Query("SELECT u FROM User u JOIN u.location l WHERE l.districtName = :districtName")
+    List<User> findUsersByDistrictName(@Param("districtName") String districtName);
+
+    /**
+     * Find users by sector name
+     */
+    @Query("SELECT u FROM User u JOIN u.location l WHERE l.sectorName = :sectorName")
+    List<User> findUsersBySectorName(@Param("sectorName") String sectorName);
+
+    /**
+     * Find users by cell name
+     */
+    @Query("SELECT u FROM User u JOIN u.location l WHERE l.cellName = :cellName")
+    List<User> findUsersByCellName(@Param("cellName") String cellName);
+
+    /**
+     * Find users by village name
+     */
+    @Query("SELECT u FROM User u JOIN u.location l WHERE l.villageName = :villageName")
+    List<User> findUsersByVillageName(@Param("villageName") String villageName);
+
+    /**
+     * Find users by complete location hierarchy
+     */
+    @Query("SELECT u FROM User u JOIN u.location l " +
+           "WHERE l.provinceCode = :provinceCode " +
+           "AND l.districtName = :districtName " +
+           "AND (:sectorName IS NULL OR l.sectorName = :sectorName) " +
+           "AND (:cellName IS NULL OR l.cellName = :cellName) " +
+           "AND (:villageName IS NULL OR l.villageName = :villageName)")
+    List<User> findUsersByLocationHierarchy(
+        @Param("provinceCode") String provinceCode,
+        @Param("districtName") String districtName,
+        @Param("sectorName") String sectorName,
+        @Param("cellName") String cellName,
+        @Param("villageName") String villageName
+    );
 }
