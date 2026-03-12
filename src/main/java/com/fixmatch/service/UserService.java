@@ -2,7 +2,9 @@ package com.fixmatch.service;
 
 import com.fixmatch.entity.User;
 import com.fixmatch.entity.UserType;
+import com.fixmatch.entity.Location;
 import com.fixmatch.repository.UserRepository;
+import com.fixmatch.repository.LocationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,15 +28,19 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private LocationRepository locationRepository;
+
     /**
-     * Register new user
+     * Register new user with location
      * 
      * Logic:
      * - Check if email already exists using existsByEmail()
      * - Check if phone already exists using existsByPhone()
+     * - Set location if provided
      * - Save user if validation passes
      */
-    public User registerUser(User user) {
+    public User registerUser(User user, Long locationId) {
         // REQUIREMENT #7: Use existsBy() methods
         if (userRepository.existsByEmail(user.getEmail())) {
             throw new RuntimeException("Email already exists: " + user.getEmail());
@@ -44,10 +50,50 @@ public class UserService {
             throw new RuntimeException("Phone number already exists: " + user.getPhone());
         }
         
+        // Set location if provided
+        if (locationId != null) {
+            Location location = locationRepository.findById(locationId)
+                .orElseThrow(() -> new RuntimeException("Location not found with id: " + locationId));
+            user.setLocation(location);
+        }
+        
         // In real app, hash password here
         // user.setPassword(passwordEncoder.encode(user.getPassword()));
         
         return userRepository.save(user);
+    }
+
+    /**
+     * Register new user by village name
+     * 
+     * This method finds the location by village name and automatically
+     * links the user to the complete location hierarchy
+     */
+    public User registerUserByVillage(User user, String villageName) {
+        // REQUIREMENT #7: Use existsBy() methods
+        if (userRepository.existsByEmail(user.getEmail())) {
+            throw new RuntimeException("Email already exists: " + user.getEmail());
+        }
+        
+        if (user.getPhone() != null && userRepository.existsByPhone(user.getPhone())) {
+            throw new RuntimeException("Phone number already exists: " + user.getPhone());
+        }
+        
+        // Find location by village name
+        Location location = locationRepository.findByVillageName(villageName)
+            .orElseThrow(() -> new RuntimeException("Village not found: " + villageName));
+        
+        // Set the complete location (which includes Province, District, Sector, Cell, Village)
+        user.setLocation(location);
+        
+        return userRepository.save(user);
+    }
+
+    /**
+     * Register new user (backward compatibility)
+     */
+    public User registerUser(User user) {
+        return registerUser(user, null);
     }
 
     /**

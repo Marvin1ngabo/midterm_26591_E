@@ -27,15 +27,35 @@ public class UserController {
     private UserService userService;
 
     /**
-     * Register new user
+     * Register new user with location
      * 
-     * POST /api/users/register
+     * POST /api/users/register?locationId=1
      * Body: { "name": "John", "email": "john@example.com", "password": "pass", "userType": "CLIENT" }
      */
     @PostMapping("/register")
-    public ResponseEntity<User> registerUser(@RequestBody User user) {
+    public ResponseEntity<User> registerUser(
+            @RequestBody User user,
+            @RequestParam(required = false) Long locationId) {
         try {
-            User registered = userService.registerUser(user);
+            User registered = userService.registerUser(user, locationId);
+            return new ResponseEntity<>(registered, HttpStatus.CREATED);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    /**
+     * Register new user by village name (easier for frontend)
+     * 
+     * POST /api/users/register/village?villageName=Kiyovu
+     * Body: { "name": "John", "email": "john@example.com", "password": "pass", "userType": "CLIENT" }
+     */
+    @PostMapping("/register/village")
+    public ResponseEntity<User> registerUserByVillage(
+            @RequestBody User user,
+            @RequestParam String villageName) {
+        try {
+            User registered = userService.registerUserByVillage(user, villageName);
             return new ResponseEntity<>(registered, HttpStatus.CREATED);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();

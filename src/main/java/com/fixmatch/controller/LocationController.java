@@ -195,4 +195,26 @@ public class LocationController {
         List<Location> locations = locationService.getCompleteHierarchyLocations();
         return ResponseEntity.ok(locations);
     }
+
+    /**
+     * Get all villages for user registration
+     * 
+     * GET /api/locations/villages
+     */
+    @GetMapping("/villages")
+    public ResponseEntity<List<Location>> getAllVillageLocations() {
+        List<Location> villages = locationService.getAllVillageLocations();
+        return ResponseEntity.ok(villages);
+    }
+
+    /**
+     * Get all village names only
+     * 
+     * GET /api/locations/villages/names
+     */
+    @GetMapping("/villages/names")
+    public ResponseEntity<List<String>> getAllVillageNames() {
+        List<String> villageNames = locationService.getAllVillageNames();
+        return ResponseEntity.ok(villageNames);
+    }
 }

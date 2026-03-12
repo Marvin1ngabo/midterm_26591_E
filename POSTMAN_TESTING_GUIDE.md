@@ -7,19 +7,19 @@
 1. Open Postman
 2. Click **Import** button (top left)
 3. Select **File** tab
-4. Choose `FixMatch_Postman_Collection.json`
+4. Choose `FixMatch_Postman_Collection_Updated.json`
 5. Click **Import**
 
-You'll see a collection called **"FixMatch API"** with 5 folders!
+You'll see a collection called **"FixMatch API - Complete with Location Hierarchy"** with 5 folders!
 
 ---
 
 ## 📋 Test Sequence (Follow This Order)
 
-### ✅ Test 1: Get All Locations
-**Folder:** 1. Locations → Get All Locations  
+### ✅ Test 1: Get All Village Locations (For Registration)
+**Folder:** 1. Locations → Get All Village Locations  
 **Method:** GET  
-**URL:** `http://localhost:8080/api/locations`
+**URL:** `http://localhost:8080/api/locations/villages`
 
 **Expected Response:**
 ```json
@@ -33,22 +33,110 @@ You'll see a collection called **"FixMatch API"** with 5 folders!
     "cellName": "Rugenge",
     "villageName": "Kiyovu"
   },
-  {
-    "id": 2,
-    "provinceCode": "EST",
-    "provinceName": "Eastern Province",
-    "districtName": "Rwamagana"
-  },
   ...
 ]
 ```
 
 ---
 
-### ✅ Test 2: Check Location Exists (Requirement #7)
-**Folder:** 1. Locations → Check Location Exists  
+### ✅ Test 2: Get All Village Names Only
+**Folder:** 1. Locations → Get All Village Names Only  
 **Method:** GET  
-**URL:** `http://localhost:8080/api/locations/province/code/exists/KGL`
+**URL:** `http://localhost:8080/api/locations/villages/names`
+
+**Expected Response:**
+```json
+[
+  "Kiyovu",
+  "Kimihurura",
+  "Nyarutarama",
+  ...
+]
+```
+
+---
+
+### ✅ Test 3: Register User by Village Name (RECOMMENDED)
+**Folder:** 2. Users → Register User by Village Name  
+**Method:** POST  
+**URL:** `http://localhost:8080/api/users/register/village?villageName=Kiyovu`  
+**Body:**
+```json
+{
+  "name": "Jane Smith",
+  "email": "jane.smith@example.com",
+  "password": "password123",
+  "phone": "0782345678",
+  "userType": "PROVIDER"
+}
+```
+
+**Expected Response:**
+```json
+{
+  "id": 6,
+  "name": "Jane Smith",
+  "email": "jane.smith@example.com",
+  "phone": "0782345678",
+  "userType": "PROVIDER",
+  "location": {
+    "id": 1,
+    "provinceCode": "KGL",
+    "provinceName": "Kigali",
+    "districtName": "Gasabo",
+    "sectorName": "Kimisagara",
+    "cellName": "Rugenge",
+    "villageName": "Kiyovu"
+  }
+}
+```
+
+**Note:** The user is automatically linked to the complete location hierarchy!
+
+---
+
+### ✅ Test 4: Register User with Location ID
+**Folder:** 2. Users → Register User with Location ID  
+**Method:** POST  
+**URL:** `http://localhost:8080/api/users/register?locationId=1`  
+**Body:**
+```json
+{
+  "name": "John Doe",
+  "email": "john.doe@example.com",
+  "password": "password123",
+  "phone": "0781234567",
+  "userType": "CLIENT"
+}
+```
+
+**Expected Response:** User with location linked by ID
+
+---
+
+### ✅ Test 5: Register User (Basic - No Location)
+**Folder:** 2. Users → Register User (Basic)  
+**Method:** POST  
+**URL:** `http://localhost:8080/api/users/register`  
+**Body:**
+```json
+{
+  "name": "Test User",
+  "email": "test@example.com",
+  "password": "password123",
+  "phone": "0789999999",
+  "userType": "CLIENT"
+}
+```
+
+**Expected Response:** User without location (location field will be null)
+
+---
+
+### ✅ Test 6: Check Location Exists (Requirement #7)
+**Folder:** 1. Locations → Check Province Exists  
+**Method:** GET  
+**URL:** `http://localhost:8080/api/locations/province/KGL/exists`
 
 **Expected Response:**
 ```json
@@ -57,7 +145,7 @@ true
 
 ---
 
-### ✅ Test 3: Get Users by Province CODE (Requirement #8)
+### ✅ Test 7: Get Users by Province CODE (Requirement #8)
 **Folder:** 2. Users → Get Users by Province CODE  
 **Method:** GET  
 **URL:** `http://localhost:8080/api/users/province/code/KGL`
@@ -70,7 +158,10 @@ true
     "name": "Jean Uwimana",
     "email": "jean@example.com",
     "userType": "CLIENT",
-    ...
+    "location": {
+      "provinceCode": "KGL",
+      "provinceName": "Kigali"
+    }
   },
   ...
 ]
@@ -78,39 +169,7 @@ true
 
 ---
 
-### ✅ Test 4: Get Users by Province NAME (Requirement #8)
-**Folder:** 2. Users → Get Users by Province NAME  
-**Method:** GET  
-**URL:** `http://localhost:8080/api/users/province/name/Kigali`
-
-**Expected Response:** Same as Test 3
-
----
-
-### ✅ Test 4B: Get Users by District Name (NEW)
-**Folder:** 2. Users → Get Users by District Name  
-**Method:** GET  
-**URL:** `http://localhost:8080/api/users/district/name/Gasabo`
-
-**Expected Response:**
-```json
-[
-  {
-    "id": 1,
-    "name": "Jean Uwimana",
-    "email": "jean@example.com",
-    "location": {
-      "provinceCode": "KGL",
-      "provinceName": "Kigali",
-      "districtName": "Gasabo"
-    }
-  }
-]
-```
-
----
-
-### ✅ Test 4C: Get Users by Village Name (NEW)
+### ✅ Test 8: Get Users by Village Name (NEW)
 **Folder:** 2. Users → Get Users by Village Name  
 **Method:** GET  
 **URL:** `http://localhost:8080/api/users/village/name/Kiyovu`
@@ -119,7 +178,7 @@ true
 
 ---
 
-### ✅ Test 4D: Get Users by Location Hierarchy (NEW)
+### ✅ Test 9: Get Users by Location Hierarchy (NEW)
 **Folder:** 2. Users → Get Users by Location Hierarchy  
 **Method:** GET  
 **URL:** `http://localhost:8080/api/users/location?provinceCode=KGL&districtName=Gasabo&sectorName=Kimisagara`
@@ -128,7 +187,7 @@ true
 
 ---
 
-### ✅ Test 5: Check Email Exists (Requirement #7)
+### ✅ Test 10: Check Email Exists (Requirement #7)
 **Folder:** 2. Users → Check Email Exists  
 **Method:** GET  
 **URL:** `http://localhost:8080/api/users/exists/email?email=jean@example.com`
@@ -384,3 +443,61 @@ All these are included in the collection!
 ---
 
 **Happy Testing!** 🚀
+
+---
+
+## 🏘️ Village-Based User Registration
+
+### Why Village-Based Registration?
+When users register by selecting their village, they automatically get linked to the complete location hierarchy:
+- **Province** (e.g., "Kigali")
+- **District** (e.g., "Gasabo") 
+- **Sector** (e.g., "Kimisagara")
+- **Cell** (e.g., "Rugenge")
+- **Village** (e.g., "Kiyovu")
+
+This means you can query users by any level of the hierarchy!
+
+### Testing Village Registration Flow
+
+1. **Get Available Villages** (Test 1 & 2)
+   - Use `/api/locations/villages` to show users available villages
+   - Use `/api/locations/villages/names` for a simple dropdown
+
+2. **Register User by Village** (Test 3)
+   - User selects "Kiyovu" from dropdown
+   - System automatically links to complete hierarchy
+   - User can now be found by province, district, sector, cell, or village queries
+
+3. **Verify Location Linking** (Tests 7-9)
+   - Test that user appears in province queries
+   - Test that user appears in village queries
+   - Test hierarchical location queries
+
+### Sample Village Registration Test
+
+```bash
+# Step 1: Get available villages
+curl http://localhost:8080/api/locations/villages/names
+
+# Step 2: Register user by village
+curl -X POST http://localhost:8080/api/users/register/village?villageName=Kiyovu \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Village User",
+    "email": "village.user@example.com",
+    "password": "password123",
+    "phone": "0783456789",
+    "userType": "CLIENT"
+  }'
+
+# Step 3: Verify user appears in province query
+curl http://localhost:8080/api/users/province/code/KGL
+
+# Step 4: Verify user appears in village query
+curl http://localhost:8080/api/users/village/name/Kiyovu
+```
+
+---
+
+**Village Registration Complete!** 🏘️✅

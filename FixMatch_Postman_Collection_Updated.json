@@ -125,6 +125,65 @@
           }
         },
         {
+          "name": "Get All Village Locations (For Registration)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/locations/villages",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "locations", "villages"]
+            }
+          }
+        },
+        {
+          "name": "Get All Village Names Only",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/locations/villages/names",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "locations", "villages", "names"]
+            }
+          }
+        },
+        {
+          "name": "Get Complete Hierarchy Locations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/locations/complete",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "locations", "complete"]
+            }
+          }
+        },
+        {
+          "name": "Search Locations by Keyword",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/locations/search?keyword=Kiyovu",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "locations", "search"],
+              "query": [
+                {"key": "keyword", "value": "Kiyovu"}
+              ]
+            }
+          }
+        },
+        {
           "name": "Get Locations with Pagination (Requirement #3)",
           "request": {
             "method": "GET",
@@ -148,7 +207,7 @@
       "name": "2. Users - Location Hierarchy",
       "item": [
         {
-          "name": "Register User",
+          "name": "Register User (Basic)",
           "request": {
             "method": "POST",
             "header": [
@@ -167,6 +226,58 @@
               "host": ["localhost"],
               "port": "8080",
               "path": ["api", "users", "register"]
+            }
+          }
+        },
+        {
+          "name": "Register User with Location ID",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"password123\",\n  \"phone\": \"0781234567\",\n  \"userType\": \"CLIENT\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/users/register?locationId=1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "users", "register"],
+              "query": [
+                {"key": "locationId", "value": "1"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Register User by Village Name (RECOMMENDED)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Smith\",\n  \"email\": \"jane.smith@example.com\",\n  \"password\": \"password123\",\n  \"phone\": \"0782345678\",\n  \"userType\": \"PROVIDER\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/users/register/village?villageName=Kiyovu",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "users", "register", "village"],
+              "query": [
+                {"key": "villageName", "value": "Kiyovu"}
+              ]
             }
           }
         },

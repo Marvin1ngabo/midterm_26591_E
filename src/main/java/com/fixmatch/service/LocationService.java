@@ -161,8 +161,18 @@ public class LocationService {
     }
 
     /**
-     * Inner class for location statistics
+     * Get all village locations for user registration
      */
+    public List<Location> getAllVillageLocations() {
+        return locationRepository.findAllVillageLocations();
+    }
+
+    /**
+     * Get all village names
+     */
+    public List<String> getAllVillageNames() {
+        return locationRepository.findAllVillageNames();
+    }
     public static class LocationStatistics {
         private final long totalLocations;
         private final long totalProvinces;

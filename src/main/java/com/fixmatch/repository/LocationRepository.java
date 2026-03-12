@@ -110,4 +110,21 @@ public interface LocationRepository extends JpaRepository<Location, Long> {
      */
     Optional<Location> findByProvinceCodeAndDistrictNameAndSectorNameAndCellNameAndVillageName(
         String provinceCode, String districtName, String sectorName, String cellName, String villageName);
+
+    /**
+     * Find location by village name
+     */
+    Optional<Location> findByVillageName(String villageName);
+
+    /**
+     * Get all villages (distinct village names)
+     */
+    @Query("SELECT DISTINCT l.villageName FROM Location l WHERE l.villageName IS NOT NULL ORDER BY l.villageName")
+    List<String> findAllVillageNames();
+
+    /**
+     * Find all locations with villages (for user registration dropdown)
+     */
+    @Query("SELECT l FROM Location l WHERE l.villageName IS NOT NULL ORDER BY l.provinceName, l.districtName, l.villageName")
+    List<Location> findAllVillageLocations();
 }
