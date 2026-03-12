@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.LocalDateTime;
 
 /**
@@ -54,6 +55,15 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private UserType userType;
+
+    /**
+     * Village name for registration (transient field)
+     * This field is used during registration to find the location
+     * It's not stored in the database, only used for processing
+     */
+    @Transient
+    @JsonProperty("villageName")
+    private String villageName;
 
     /**
      * Many-to-One Relationship with Location
@@ -115,6 +125,10 @@ public class User {
     public String getFullLocation() {
         if (location != null) {
             return location.getFullAddress();
+        }
+        // Debug: show if villageName was received
+        if (villageName != null) {
+            return "Village name received: " + villageName + " (but location not set)";
         }
         return "Location not set";
     }

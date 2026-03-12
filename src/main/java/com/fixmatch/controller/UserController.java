@@ -2,6 +2,7 @@ package com.fixmatch.controller;
 
 import com.fixmatch.entity.User;
 import com.fixmatch.entity.UserType;
+import com.fixmatch.dto.UserRegistrationRequest;
 import com.fixmatch.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -27,17 +28,39 @@ public class UserController {
     private UserService userService;
 
     /**
-     * Register new user with location
+     * Register new user with village in request body or locationId parameter
      * 
+     * POST /api/users/register
+     * Body: { 
+     *   "name": "John", 
+     *   "email": "john@example.com", 
+     *   "password": "pass", 
+     *   "userType": "CLIENT",
+     *   "villageName": "Kiyovu"  // Optional: village name in body
+     * }
+     * 
+     * OR with locationId parameter (legacy):
      * POST /api/users/register?locationId=1
-     * Body: { "name": "John", "email": "john@example.com", "password": "pass", "userType": "CLIENT" }
      */
     @PostMapping("/register")
     public ResponseEntity<User> registerUser(
-            @RequestBody User user,
+            @RequestBody UserRegistrationRequest request,
             @RequestParam(required = false) Long locationId) {
         try {
-            User registered = userService.registerUser(user, locationId);
+            User registered;
+            if (locationId != null) {
+                // Legacy: use locationId parameter
+                User user = new User();
+                user.setName(request.getName());
+                user.setEmail(request.getEmail());
+                user.setPassword(request.getPassword());
+                user.setPhone(request.getPhone());
+                user.setUserType(request.getUserType());
+                registered = userService.registerUser(user, locationId);
+            } else {
+                // New: use villageName in request body
+                registered = userService.registerUserFromRequest(request);
+            }
             return new ResponseEntity<>(registered, HttpStatus.CREATED);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();

@@ -118,7 +118,23 @@ GET /api/locations/villages/names
 
 ## 👤 User Endpoints
 
-#### Register User (Basic)
+#### Register User with Village in Request Body (RECOMMENDED)
+```http
+POST /api/users/register
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "password": "password123",
+  "phone": "0781234567",
+  "userType": "CLIENT",
+  "villageName": "Kiyovu"
+}
+```
+**Note**: The villageName automatically links the user to the complete location hierarchy (Province → District → Sector → Cell → Village)
+
+#### Register User without Village (Optional)
 ```http
 POST /api/users/register
 Content-Type: application/json
@@ -132,7 +148,7 @@ Content-Type: application/json
 }
 ```
 
-#### Register User with Location ID
+#### Register User with Location ID (Legacy)
 ```http
 POST /api/users/register?locationId=1
 Content-Type: application/json
@@ -146,7 +162,7 @@ Content-Type: application/json
 }
 ```
 
-#### Register User by Village Name (RECOMMENDED)
+#### Register User by Village Name Parameter (Alternative)
 ```http
 POST /api/users/register/village?villageName=Kiyovu
 Content-Type: application/json
@@ -159,7 +175,6 @@ Content-Type: application/json
   "userType": "PROVIDER"
 }
 ```
-**Note**: This automatically links the user to the complete location hierarchy (Province → District → Sector → Cell → Village)
 
 #### Get User by ID
 ```http

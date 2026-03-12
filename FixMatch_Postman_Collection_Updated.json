@@ -207,7 +207,7 @@
       "name": "2. Users - Location Hierarchy",
       "item": [
         {
-          "name": "Register User (Basic)",
+          "name": "Register User with Village in Body (MAIN)",
           "request": {
             "method": "POST",
             "header": [
@@ -218,7 +218,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\",\n  \"phone\": \"0789999999\",\n  \"userType\": \"CLIENT\"\n}"
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"password123\",\n  \"phone\": \"0781234567\",\n  \"userType\": \"CLIENT\",\n  \"villageName\": \"Kiyovu\"\n}"
             },
             "url": {
               "raw": "http://localhost:8080/api/users/register",
@@ -230,7 +230,7 @@
           }
         },
         {
-          "name": "Register User with Location ID",
+          "name": "Register User without Village (Optional)",
           "request": {
             "method": "POST",
             "header": [
@@ -241,7 +241,30 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"password123\",\n  \"phone\": \"0781234567\",\n  \"userType\": \"CLIENT\"\n}"
+              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test.no.village@example.com\",\n  \"password\": \"password123\",\n  \"phone\": \"0789999999\",\n  \"userType\": \"CLIENT\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/users/register",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "users", "register"]
+            }
+          }
+        },
+        {
+          "name": "Register User with Location ID (Legacy)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Legacy User\",\n  \"email\": \"legacy.user@example.com\",\n  \"password\": \"password123\",\n  \"phone\": \"0781234568\",\n  \"userType\": \"CLIENT\"\n}"
             },
             "url": {
               "raw": "http://localhost:8080/api/users/register?locationId=1",
