@@ -61,19 +61,30 @@ curl http://localhost:8080/api
 **Verify:** Response shows 7 tables with relationships
 
 ### ✅ Requirement #2: Location Saving (2 Marks)
-**Test:** Create Province and District
+**Test:** Create Location with complete hierarchy
 ```bash
-# Create Province
-curl -X POST http://localhost:8080/api/provinces \
+# Create Location with complete hierarchy
+curl -X POST http://localhost:8080/api/locations \
   -H "Content-Type: application/json" \
-  -d '{"code":"TST","name":"Test Province"}'
+  -d '{
+    "provinceCode":"TST",
+    "provinceName":"Test Province",
+    "districtName":"Test District",
+    "sectorName":"Test Sector",
+    "cellName":"Test Cell",
+    "villageName":"Test Village"
+  }'
 
-# Create District (with foreign key)
-curl -X POST http://localhost:8080/api/districts \
+# Create Location with partial hierarchy (District level only)
+curl -X POST http://localhost:8080/api/locations \
   -H "Content-Type: application/json" \
-  -d '{"name":"Test District","provinceId":1}'
+  -d '{
+    "provinceCode":"TST2",
+    "provinceName":"Test Province 2",
+    "districtName":"Test District 2"
+  }'
 ```
-**Verify:** District has `province_id` foreign key
+**Verify:** Single location table stores complete hierarchy, Users/Jobs reference via `location_id`
 
 ### ✅ Requirement #3: Sorting & Pagination (5 Marks)
 **Test Sorting:**
@@ -107,13 +118,16 @@ curl -X POST http://localhost:8080/api/providers \
 ```
 
 ### ✅ Requirement #5: One-to-Many (2 Marks)
-**Test:** Province → District relationship
+**Test:** Location → User and Location → Job relationships
 ```bash
-# Get all provinces (shows districts list)
-curl http://localhost:8080/api/provinces
+# Get locations with their users
+curl http://localhost:8080/api/locations
 
-# Get districts by province
-curl http://localhost:8080/api/districts/province/1
+# Get users by location
+curl http://localhost:8080/api/users/location/1
+
+# Get jobs by location
+curl http://localhost:8080/api/jobs/location/1
 ```
 
 ### ✅ Requirement #6: One-to-One (2 Marks)
@@ -156,7 +170,7 @@ curl http://localhost:8080/api/users/province/name/Kigali
 psql -U postgres -d Gig_db
 
 -- Check table structure
-\d districts
+\d locations
 \d users
 \d provider_profiles
 
@@ -216,7 +230,7 @@ time curl "http://localhost:8080/api/users?sortBy=name&direction=asc"
 3. **Foreign key constraint violations**
    ```bash
    # Check data seeder has run
-   curl http://localhost:8080/api/provinces
+   curl http://localhost:8080/api/locations
    ```
 
 ## 📊 Expected Test Results
@@ -229,12 +243,11 @@ time curl "http://localhost:8080/api/users?sortBy=name&direction=asc"
 - **Foreign Keys:** Related data properly linked
 
 ### Database Tables Created
-- `provinces` (id, code, name)
-- `districts` (id, name, province_id)
-- `users` (id, name, email, district_id)
+- `locations` (id, province_code, province_name, district_name, sector_name, cell_name, village_name)
+- `users` (id, name, email, location_id)
 - `provider_profiles` (id, user_id, bio, rating)
 - `provider_skills` (provider_id, skill_id)
-- `jobs` (id, title, client_id, provider_id, category_id)
+- `jobs` (id, title, client_id, provider_id, category_id, location_id)
 - `service_categories` (id, name, description)
 - `skills` (id, name, description)
 

@@ -16,23 +16,28 @@ You'll see a collection called **"FixMatch API"** with 5 folders!
 
 ## 📋 Test Sequence (Follow This Order)
 
-### ✅ Test 1: Get All Provinces
-**Folder:** 1. Locations → Get All Provinces  
+### ✅ Test 1: Get All Locations
+**Folder:** 1. Locations → Get All Locations  
 **Method:** GET  
-**URL:** `http://localhost:8080/api/locations/provinces`
+**URL:** `http://localhost:8080/api/locations`
 
 **Expected Response:**
 ```json
 [
   {
     "id": 1,
-    "code": "KGL",
-    "name": "Kigali"
+    "provinceCode": "KGL",
+    "provinceName": "Kigali",
+    "districtName": "Gasabo",
+    "sectorName": "Kimisagara",
+    "cellName": "Rugenge",
+    "villageName": "Kiyovu"
   },
   {
     "id": 2,
-    "code": "EST",
-    "name": "Eastern Province"
+    "provinceCode": "EST",
+    "provinceName": "Eastern Province",
+    "districtName": "Rwamagana"
   },
   ...
 ]
@@ -40,10 +45,10 @@ You'll see a collection called **"FixMatch API"** with 5 folders!
 
 ---
 
-### ✅ Test 2: Check Province Exists (Requirement #7)
-**Folder:** 1. Locations → Check Province Exists  
+### ✅ Test 2: Check Location Exists (Requirement #7)
+**Folder:** 1. Locations → Check Location Exists  
 **Method:** GET  
-**URL:** `http://localhost:8080/api/locations/provinces/exists/KGL`
+**URL:** `http://localhost:8080/api/locations/province/code/exists/KGL`
 
 **Expected Response:**
 ```json
@@ -143,15 +148,19 @@ true
 
 ---
 
-### ✅ Test 10: Create Province (Requirement #2)
-**Folder:** 1. Locations → Create Province  
+### ✅ Test 10: Create Location (Requirement #2)
+**Folder:** 1. Locations → Create Location  
 **Method:** POST  
-**URL:** `http://localhost:8080/api/locations/provinces`  
+**URL:** `http://localhost:8080/api/locations`  
 **Body:**
 ```json
 {
-  "code": "TEST",
-  "name": "Test Province"
+  "provinceCode": "TEST",
+  "provinceName": "Test Province",
+  "districtName": "Test District",
+  "sectorName": "Test Sector",
+  "cellName": "Test Cell",
+  "villageName": "Test Village"
 }
 ```
 
@@ -159,45 +168,53 @@ true
 ```json
 {
   "id": 6,
-  "code": "TEST",
-  "name": "Test Province"
+  "provinceCode": "TEST",
+  "provinceName": "Test Province",
+  "districtName": "Test District",
+  "sectorName": "Test Sector",
+  "cellName": "Test Cell",
+  "villageName": "Test Village",
+  "fullAddress": "Test Village, Test Cell, Test Sector, Test District, Test Province"
 }
 ```
 
 ---
 
-### ✅ Test 11: Create District (Requirement #2)
-**Folder:** 1. Locations → Create District  
+### ✅ Test 11: Create Partial Location (Requirement #2)
+**Folder:** 1. Locations → Create Partial Location  
 **Method:** POST  
-**URL:** `http://localhost:8080/api/locations/districts?provinceId=1`  
+**URL:** `http://localhost:8080/api/locations`  
 **Body:**
 ```json
 {
-  "name": "Test District"
+  "provinceCode": "TEST2",
+  "provinceName": "Test Province 2",
+  "districtName": "Test District 2"
 }
 ```
 
 **Expected Response:**
 ```json
 {
-  "id": 6,
-  "name": "Test District",
-  "province": {
-    "id": 1,
-    "code": "KGL",
-    "name": "Kigali"
-  }
+  "id": 7,
+  "provinceCode": "TEST2",
+  "provinceName": "Test Province 2",
+  "districtName": "Test District 2",
+  "sectorName": null,
+  "cellName": null,
+  "villageName": null,
+  "shortAddress": "Test District 2, Test Province 2"
 }
 ```
 
 ---
 
-### ✅ Test 12: Get Districts with Pagination (Requirement #3)
-**Folder:** 1. Locations → Get Districts with Pagination  
+### ✅ Test 12: Get Locations with Pagination (Requirement #3)
+**Folder:** 1. Locations → Get Locations with Pagination  
 **Method:** GET  
-**URL:** `http://localhost:8080/api/locations/provinces/1/districts/paginated?page=0&size=10`
+**URL:** `http://localhost:8080/api/locations?page=0&size=10&sortBy=provinceName&direction=asc`
 
-**Expected Response:** Paginated list of districts
+**Expected Response:** Paginated list of locations sorted by province name
 
 ---
 
@@ -222,13 +239,13 @@ true
 ## 🎯 Testing All Requirements
 
 ### Requirement #2: Saving Location ✅
-- Test 10: Create Province
-- Test 11: Create District
+- Test 10: Create Complete Location
+- Test 11: Create Partial Location
 
 ### Requirement #3: Pagination & Sorting ✅
 - Test 6: Users with Pagination
 - Test 7: Providers with Sorting
-- Test 12: Districts with Pagination
+- Test 12: Locations with Pagination
 - Test 13: Jobs with Pagination
 - Test 14: Categories with Sorting
 
@@ -237,14 +254,15 @@ true
 - Test 9: Add Skill to Provider
 
 ### Requirement #5: One-to-Many ✅
-- Test 1: Get Provinces (shows districts relationship)
-- Test 11: Create District (shows foreign key)
+- Test 1: Get Locations (shows users/jobs relationship)
+- Location → User (location_id in users table)
+- Location → Job (location_id in jobs table)
 
 ### Requirement #6: One-to-One ✅
 - Create Provider Profile (in collection)
 
 ### Requirement #7: existsBy() ✅
-- Test 2: Check Province Exists
+- Test 2: Check Location Exists by Province Code
 - Test 5: Check Email Exists
 
 ### Requirement #8: Users by Province ✅
@@ -276,13 +294,12 @@ mvn spring-boot:run
 ## 📊 Expected Data
 
 After seeding, you should have:
-- 5 Provinces
-- 5 Districts
-- 5 Users (2 clients, 3 providers)
-- 3 Provider Profiles
-- 5 Service Categories
-- 4 Jobs
-- 5 Skills
+- 5 Locations (with complete hierarchy: Kigali-Gasabo-Kimisagara, Eastern-Rwamagana, etc.)
+- 5 Users (2 clients, 3 providers) - each linked to a location
+- 3 Provider Profiles (one-to-one with provider users)
+- 5 Service Categories (Plumbing, Electrical, Cleaning, etc.)
+- 4 Jobs (various statuses and budgets) - each linked to a location
+- 5 Skills (linked to providers via many-to-many)
 
 ---
 
