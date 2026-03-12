@@ -2,19 +2,49 @@
 
 Base URL: `http://localhost:8080`
 
+# FixMatch API Endpoints Documentation
+
+Base URL: `http://localhost:8080`
+
 ## 📍 Location Endpoints
 
-### Provinces
+### Single Location Table (Complete Hierarchy)
 
-#### Create Province (Requirement #2)
+#### Create Location (Requirement #2)
 ```http
-POST /api/locations/provinces
+POST /api/locations
 Content-Type: application/json
 
 {
-  "code": "KGL",
-  "name": "Kigali"
+  "provinceCode": "KGL",
+  "provinceName": "Kigali",
+  "districtName": "Gasabo",
+  "sectorName": "Kimisagara",
+  "cellName": "Rugenge",
+  "villageName": "Kiyovu"
 }
+```
+
+#### Create Partial Location (District Level Only)
+```http
+POST /api/locations
+Content-Type: application/json
+
+{
+  "provinceCode": "KGL",
+  "provinceName": "Kigali",
+  "districtName": "Gasabo"
+}
+```
+
+#### Get All Locations
+```http
+GET /api/locations
+```
+
+#### Get Location by ID
+```http
+GET /api/locations/1
 ```
 
 #### Get All Provinces
@@ -22,37 +52,56 @@ Content-Type: application/json
 GET /api/locations/provinces
 ```
 
-#### Get Province by Code
+#### Get Locations by Province Code
 ```http
-GET /api/locations/provinces/code/KGL
+GET /api/locations/province/KGL
+```
+
+#### Get Locations by Province with Pagination (Requirement #3)
+```http
+GET /api/locations/province/KGL/paginated?page=0&size=10
+```
+
+#### Get Districts by Province Code
+```http
+GET /api/locations/province/KGL/districts
+```
+
+#### Get Sectors by Province and District
+```http
+GET /api/locations/province/KGL/district/Gasabo/sectors
 ```
 
 #### Check if Province Exists (Requirement #7)
 ```http
-GET /api/locations/provinces/exists/KGL
+GET /api/locations/province/KGL/exists
 Response: true/false
 ```
 
-### Districts
-
-#### Create District (Requirement #2)
+#### Check if District Exists in Province (Requirement #7)
 ```http
-POST /api/locations/districts?provinceId=1
-Content-Type: application/json
-
-{
-  "name": "Gasabo"
-}
+GET /api/locations/province/KGL/district/Gasabo/exists
+Response: true/false
 ```
 
-#### Get Districts by Province
+#### Get Locations by Level
 ```http
-GET /api/locations/provinces/1/districts
+GET /api/locations/level/Village
 ```
 
-#### Get Districts with Pagination (Requirement #3)
+#### Search Locations
 ```http
-GET /api/locations/provinces/1/districts/paginated?page=0&size=10
+GET /api/locations/search?keyword=gasabo
+```
+
+#### Get Location Statistics
+```http
+GET /api/locations/statistics
+```
+
+#### Get Complete Hierarchy Locations
+```http
+GET /api/locations/complete
 ```
 
 ---
@@ -96,6 +145,36 @@ GET /api/users/province/code/KGL
 #### Get Users by Province Name (Requirement #8)
 ```http
 GET /api/users/province/name/Kigali
+```
+
+#### Get Users by District Name
+```http
+GET /api/users/district/name/Gasabo
+```
+
+#### Get Users by Sector Name
+```http
+GET /api/users/sector/name/Kimisagara
+```
+
+#### Get Users by Cell Name
+```http
+GET /api/users/cell/name/Rugenge
+```
+
+#### Get Users by Village Name
+```http
+GET /api/users/village/name/Kiyovu
+```
+
+#### Get Users by Location Hierarchy
+```http
+GET /api/users/location?provinceCode=KGL&districtName=Gasabo&sectorName=Kimisagara&cellName=Rugenge&villageName=Kiyovu
+```
+
+#### Get Users by Location ID
+```http
+GET /api/users/location/1
 ```
 
 #### Get Providers by Province with Pagination
@@ -194,7 +273,7 @@ Content-Type: application/json
 
 #### Create Job
 ```http
-POST /api/jobs?clientId=1&categoryId=1&districtId=1
+POST /api/jobs?clientId=1&categoryId=1&locationId=1
 Content-Type: application/json
 
 {
@@ -286,15 +365,26 @@ GET /api/categories/name/Plumbing
 
 ### Test Requirement #2: Saving Location
 ```bash
-# 1. Create Province
-curl -X POST http://localhost:8080/api/locations/provinces \
+# 1. Create Complete Location Hierarchy
+curl -X POST http://localhost:8080/api/locations \
   -H "Content-Type: application/json" \
-  -d '{"code":"KGL","name":"Kigali"}'
+  -d '{
+    "provinceCode":"KGL",
+    "provinceName":"Kigali",
+    "districtName":"Gasabo",
+    "sectorName":"Kimisagara",
+    "cellName":"Rugenge",
+    "villageName":"Kiyovu"
+  }'
 
-# 2. Create District
-curl -X POST http://localhost:8080/api/locations/districts?provinceId=1 \
+# 2. Create Partial Location (District Level)
+curl -X POST http://localhost:8080/api/locations \
   -H "Content-Type: application/json" \
-  -d '{"name":"Gasabo"}'
+  -d '{
+    "provinceCode":"EST",
+    "provinceName":"Eastern Province",
+    "districtName":"Rwamagana"
+  }'
 ```
 
 ### Test Requirement #3: Pagination & Sorting
@@ -315,13 +405,22 @@ curl -X POST http://localhost:8080/api/providers/1/skills?skillName=Plumbing
 curl http://localhost:8080/api/users/exists/email?email=john@example.com
 ```
 
-### Test Requirement #8: Users by Province
+### Test Requirement #8: Users by Province and Location Hierarchy
 ```bash
 # By province code
 curl http://localhost:8080/api/users/province/code/KGL
 
 # By province name
 curl http://localhost:8080/api/users/province/name/Kigali
+
+# By district name
+curl http://localhost:8080/api/users/district/name/Gasabo
+
+# By village name
+curl http://localhost:8080/api/users/village/name/Kiyovu
+
+# By complete location hierarchy
+curl "http://localhost:8080/api/users/location?provinceCode=KGL&districtName=Gasabo&sectorName=Kimisagara"
 ```
 
 ---
@@ -379,7 +478,7 @@ curl http://localhost:8080/api/users/province/name/Kigali
 - ✅ Requirement #2: Location saving endpoints
 - ✅ Requirement #3: Pagination & Sorting on all list endpoints
 - ✅ Requirement #4: Many-to-Many (Provider ↔ Skill)
-- ✅ Requirement #5: One-to-Many (Province → District)
+- ✅ Requirement #5: One-to-Many (Location → User, Location → Job)
 - ✅ Requirement #6: One-to-One (User → ProviderProfile)
 - ✅ Requirement #7: existsBy() methods
-- ✅ Requirement #8: Users by province (code & name)
+- ✅ Requirement #8: Users by province and complete location hierarchy (code, name, district, sector, cell, village)

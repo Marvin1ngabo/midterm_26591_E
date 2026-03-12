@@ -1,7 +1,7 @@
 {
   "info": {
-    "name": "FixMatch API - Corrected",
-    "description": "Complete API collection for FixMatch Gig Management System with correct endpoints",
+    "name": "FixMatch API - Complete with Location Hierarchy",
+    "description": "Complete API collection for FixMatch with all location hierarchy endpoints",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -65,7 +65,7 @@
           }
         },
         {
-          "name": "Create Location (Requirement #2)",
+          "name": "Create Complete Location (Requirement #2)",
           "request": {
             "method": "POST",
             "header": [
@@ -77,6 +77,29 @@
             "body": {
               "mode": "raw",
               "raw": "{\n  \"provinceCode\": \"TEST\",\n  \"provinceName\": \"Test Province\",\n  \"districtName\": \"Test District\",\n  \"sectorName\": \"Test Sector\",\n  \"cellName\": \"Test Cell\",\n  \"villageName\": \"Test Village\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/locations",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "locations"]
+            }
+          }
+        },
+        {
+          "name": "Create Partial Location (Requirement #2)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"provinceCode\": \"TEST2\",\n  \"provinceName\": \"Test Province 2\",\n  \"districtName\": \"Test District 2\"\n}"
             },
             "url": {
               "raw": "http://localhost:8080/api/locations",
@@ -122,7 +145,7 @@
       ]
     },
     {
-      "name": "2. Users",
+      "name": "2. Users - Location Hierarchy",
       "item": [
         {
           "name": "Register User",
@@ -214,6 +237,83 @@
           }
         },
         {
+          "name": "Get Users by District Name (NEW)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/users/district/name/Gasabo",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "users", "district", "name", "Gasabo"]
+            }
+          }
+        },
+        {
+          "name": "Get Users by Sector Name (NEW)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/users/sector/name/Kimisagara",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "users", "sector", "name", "Kimisagara"]
+            }
+          }
+        },
+        {
+          "name": "Get Users by Cell Name (NEW)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/users/cell/name/Rugenge",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "users", "cell", "name", "Rugenge"]
+            }
+          }
+        },
+        {
+          "name": "Get Users by Village Name (NEW)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/users/village/name/Kiyovu",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "users", "village", "name", "Kiyovu"]
+            }
+          }
+        },
+        {
+          "name": "Get Users by Location Hierarchy (NEW)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/users/location?provinceCode=KGL&districtName=Gasabo&sectorName=Kimisagara&cellName=Rugenge&villageName=Kiyovu",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "users", "location"],
+              "query": [
+                {"key": "provinceCode", "value": "KGL"},
+                {"key": "districtName", "value": "Gasabo"},
+                {"key": "sectorName", "value": "Kimisagara"},
+                {"key": "cellName", "value": "Rugenge"},
+                {"key": "villageName", "value": "Kiyovu"}
+              ]
+            }
+          }
+        },
+        {
           "name": "Check Email Exists (Requirement #7)",
           "request": {
             "method": "GET",
@@ -248,82 +348,19 @@
           }
         },
         {
-          "name": "Get Users by Village Name",
+          "name": "Get User by ID",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:8080/api/users/village/name/Kiyovu",
+              "raw": "http://localhost:8080/api/users/1",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8080",
-              "path": ["api", "users", "village", "name", "Kiyovu"]
+              "path": ["api", "users", "1"]
             }
           }
-        },
-        {
-          "name": "Get Users by District Name",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:8080/api/users/district/name/Gasabo",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["api", "users", "district", "name", "Gasabo"]
-            }
-          }
-        },
-        {
-          "name": "Get Users by Sector Name",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:8080/api/users/sector/name/Kimisagara",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["api", "users", "sector", "name", "Kimisagara"]
-            }
-          }
-        },
-        {
-          "name": "Get Users by Cell Name",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:8080/api/users/cell/name/Rugenge",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["api", "users", "cell", "name", "Rugenge"]
-            }
-          }
-        },
-        {
-          "name": "Get Users by Location Hierarchy",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:8080/api/users/location?provinceCode=KGL&districtName=Gasabo&sectorName=Kimisagara&cellName=Rugenge&villageName=Kiyovu",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["api", "users", "location"],
-              "query": [
-                {"key": "provinceCode", "value": "KGL"},
-                {"key": "districtName", "value": "Gasabo"},
-                {"key": "sectorName", "value": "Kimisagara"},
-                {"key": "cellName", "value": "Rugenge"},
-                {"key": "villageName", "value": "Kiyovu"}
-              ]
-            }
-          }
-        },
+        }
       ]
     },
     {

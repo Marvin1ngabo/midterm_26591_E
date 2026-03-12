@@ -42,11 +42,26 @@
         <!-- Location Testing -->
         <div class="test-section">
             <h3>🌍 Location Management (Assessment Requirement #2)</h3>
-            <p><strong>Tests:</strong> Foreign key relationships, Province → District mapping</p>
+            <p><strong>Tests:</strong> Single Location table with complete hierarchy</p>
+            <button onclick="getAllLocations()">Get All Locations</button>
             <button onclick="getProvinces()">Get All Provinces</button>
-            <button onclick="getDistricts()">Get All Districts</button>
-            <button onclick="createSampleLocation()">Create Sample Province & District</button>
+            <button onclick="createCompleteLocation()">Create Complete Location</button>
+            <button onclick="createPartialLocation()">Create Partial Location</button>
+            <button onclick="checkProvinceExists()">Check Province Exists</button>
             <div id="location-result" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- Location Hierarchy User Testing -->
+        <div class="test-section">
+            <h3>👥 User Location Hierarchy (Assessment Requirement #8)</h3>
+            <p><strong>Tests:</strong> Query users by any location level</p>
+            <button onclick="getUsersByProvince()">Users by Province</button>
+            <button onclick="getUsersByDistrict()">Users by District</button>
+            <button onclick="getUsersBySector()">Users by Sector</button>
+            <button onclick="getUsersByCell()">Users by Cell</button>
+            <button onclick="getUsersByVillage()">Users by Village</button>
+            <button onclick="getUsersByHierarchy()">Users by Complete Hierarchy</button>
+            <div id="user-location-result" class="result" style="display: none;"></div>
         </div>
 
         <!-- User Management -->
@@ -194,45 +209,75 @@
         }
 
         // Location Tests
+        async function getAllLocations() {
+            const result = await makeRequest(`${BASE_URL}/locations`);
+            displayResult('location-result', result);
+        }
+
         async function getProvinces() {
-            const result = await makeRequest(`${BASE_URL}/provinces`);
+            const result = await makeRequest(`${BASE_URL}/locations/provinces`);
             displayResult('location-result', result);
         }
 
-        async function getDistricts() {
-            const result = await makeRequest(`${BASE_URL}/districts`);
-            displayResult('location-result', result);
-        }
-
-        async function createSampleLocation() {
-            // First create province
-            const province = {
-                code: "TST",
-                name: "Test Province"
+        async function createCompleteLocation() {
+            const location = {
+                provinceCode: "TST",
+                provinceName: "Test Province",
+                districtName: "Test District",
+                sectorName: "Test Sector",
+                cellName: "Test Cell",
+                villageName: "Test Village"
             };
             
-            const provinceResult = await makeRequest(`${BASE_URL}/provinces`, 'POST', province);
+            const result = await makeRequest(`${BASE_URL}/locations`, 'POST', location);
+            displayResult('location-result', result);
+        }
+
+        async function createPartialLocation() {
+            const location = {
+                provinceCode: "TST2",
+                provinceName: "Test Province 2",
+                districtName: "Test District 2"
+            };
             
-            if (provinceResult.success) {
-                // Then create district
-                const district = {
-                    name: "Test District",
-                    provinceId: provinceResult.data.id
-                };
-                
-                const districtResult = await makeRequest(`${BASE_URL}/districts`, 'POST', district);
-                displayResult('location-result', {
-                    success: true,
-                    status: 201,
-                    data: {
-                        province: provinceResult.data,
-                        district: districtResult.data,
-                        message: "Province and District created with foreign key relationship!"
-                    }
-                });
-            } else {
-                displayResult('location-result', provinceResult);
-            }
+            const result = await makeRequest(`${BASE_URL}/locations`, 'POST', location);
+            displayResult('location-result', result);
+        }
+
+        async function checkProvinceExists() {
+            const result = await makeRequest(`${BASE_URL}/locations/province/KGL/exists`);
+            displayResult('location-result', result);
+        }
+
+        // Location Hierarchy User Tests
+        async function getUsersByProvince() {
+            const result = await makeRequest(`${BASE_URL}/users/province/code/KGL`);
+            displayResult('user-location-result', result);
+        }
+
+        async function getUsersByDistrict() {
+            const result = await makeRequest(`${BASE_URL}/users/district/name/Gasabo`);
+            displayResult('user-location-result', result);
+        }
+
+        async function getUsersBySector() {
+            const result = await makeRequest(`${BASE_URL}/users/sector/name/Kimisagara`);
+            displayResult('user-location-result', result);
+        }
+
+        async function getUsersByCell() {
+            const result = await makeRequest(`${BASE_URL}/users/cell/name/Rugenge`);
+            displayResult('user-location-result', result);
+        }
+
+        async function getUsersByVillage() {
+            const result = await makeRequest(`${BASE_URL}/users/village/name/Kiyovu`);
+            displayResult('user-location-result', result);
+        }
+
+        async function getUsersByHierarchy() {
+            const result = await makeRequest(`${BASE_URL}/users/location?provinceCode=KGL&districtName=Gasabo&sectorName=Kimisagara&cellName=Rugenge&villageName=Kiyovu`);
+            displayResult('user-location-result', result);
         }
 
         // User Tests

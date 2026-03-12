@@ -152,14 +152,28 @@ curl "http://localhost:8080/api/users/exists/email?email=test@example.com"
 curl "http://localhost:8080/api/users/exists/phone?phone=0781234567"
 ```
 
-### ✅ Requirement #8: Province Queries (4 Marks)
-**Test:** Users by province code and name
+### Test Requirement #8: Users by Province and Location Hierarchy
 ```bash
-# Get users by province code
+# By province code
 curl http://localhost:8080/api/users/province/code/KGL
 
-# Get users by province name
+# By province name
 curl http://localhost:8080/api/users/province/name/Kigali
+
+# By district name (NEW)
+curl http://localhost:8080/api/users/district/name/Gasabo
+
+# By sector name (NEW)
+curl http://localhost:8080/api/users/sector/name/Kimisagara
+
+# By cell name (NEW)
+curl http://localhost:8080/api/users/cell/name/Rugenge
+
+# By village name (NEW)
+curl http://localhost:8080/api/users/village/name/Kiyovu
+
+# By complete location hierarchy (NEW)
+curl "http://localhost:8080/api/users/location?provinceCode=KGL&districtName=Gasabo&sectorName=Kimisagara&cellName=Rugenge&villageName=Kiyovu"
 ```
 
 ## 🗄️ Database Verification

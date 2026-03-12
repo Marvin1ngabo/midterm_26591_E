@@ -87,6 +87,47 @@ true
 
 ---
 
+### ✅ Test 4B: Get Users by District Name (NEW)
+**Folder:** 2. Users → Get Users by District Name  
+**Method:** GET  
+**URL:** `http://localhost:8080/api/users/district/name/Gasabo`
+
+**Expected Response:**
+```json
+[
+  {
+    "id": 1,
+    "name": "Jean Uwimana",
+    "email": "jean@example.com",
+    "location": {
+      "provinceCode": "KGL",
+      "provinceName": "Kigali",
+      "districtName": "Gasabo"
+    }
+  }
+]
+```
+
+---
+
+### ✅ Test 4C: Get Users by Village Name (NEW)
+**Folder:** 2. Users → Get Users by Village Name  
+**Method:** GET  
+**URL:** `http://localhost:8080/api/users/village/name/Kiyovu`
+
+**Expected Response:** Users living in Kiyovu village
+
+---
+
+### ✅ Test 4D: Get Users by Location Hierarchy (NEW)
+**Folder:** 2. Users → Get Users by Location Hierarchy  
+**Method:** GET  
+**URL:** `http://localhost:8080/api/users/location?provinceCode=KGL&districtName=Gasabo&sectorName=Kimisagara`
+
+**Expected Response:** Users matching the specific location hierarchy
+
+---
+
 ### ✅ Test 5: Check Email Exists (Requirement #7)
 **Folder:** 2. Users → Check Email Exists  
 **Method:** GET  
@@ -265,9 +306,12 @@ true
 - Test 2: Check Location Exists by Province Code
 - Test 5: Check Email Exists
 
-### Requirement #8: Users by Province ✅
+### Requirement #8: Users by Province and Location Hierarchy ✅
 - Test 3: Get Users by Province CODE
 - Test 4: Get Users by Province NAME
+- Test 4B: Get Users by District Name (NEW)
+- Test 4C: Get Users by Village Name (NEW)
+- Test 4D: Get Users by Location Hierarchy (NEW)
 
 ---
 
