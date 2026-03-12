@@ -1,4 +1,4 @@
-# Postman Testing Guide for FixMatch API
+# Postman Testing Guide for FixMatch API - Hierarchical Location System
 
 ## 🚀 Quick Setup
 
@@ -10,14 +10,225 @@
 4. Choose `FixMatch_Postman_Collection_Updated.json`
 5. Click **Import**
 
-You'll see a collection called **"FixMatch API - Complete with Location Hierarchy"** with 5 folders!
+You'll see a collection called **"FixMatch API - Complete with Hierarchical Location System"** with 6 folders!
 
 ---
 
 ## 📋 Test Sequence (Follow This Order)
 
-### ✅ Test 1: Get All Village Locations (For Registration)
-**Folder:** 1. Locations → Get All Village Locations  
+### ✅ **Phase 1: Initialize Hierarchical System**
+
+#### Test 1: Initialize Rwanda Administrative Hierarchy
+**Folder:** 0. Hierarchical Locations (NEW) → Initialize Rwanda Hierarchy  
+**Method:** POST  
+**URL:** `http://localhost:8080/api/hierarchical-locations/initialize`
+
+**Expected Response:**
+```json
+{
+  "message": "Rwanda administrative hierarchy initialized successfully",
+  "totalLocations": 12,
+  "provinces": 3,
+  "districts": 4,
+  "sectors": 2,
+  "cells": 2,
+  "villages": 2
+}
+```
+
+#### Test 2: Get Hierarchy Statistics
+**Folder:** 0. Hierarchical Locations (NEW) → Get Hierarchy Statistics  
+**Method:** GET  
+**URL:** `http://localhost:8080/api/hierarchical-locations/statistics`
+
+**Expected Response:**
+```json
+{
+  "totalLocations": 12,
+  "provinces": 3,
+  "districts": 4,
+  "sectors": 2,
+  "cells": 2,
+  "villages": 2
+}
+```
+
+---
+
+### ✅ **Phase 2: Explore Hierarchical Structure**
+
+#### Test 3: Get All Provinces (Root Nodes)
+**Folder:** 0. Hierarchical Locations (NEW) → Get All Provinces (Root Nodes)  
+**Method:** GET  
+**URL:** `http://localhost:8080/api/hierarchical-locations/provinces`
+
+**Expected Response:**
+```json
+[
+  {
+    "locationId": 1,
+    "name": "Kigali City",
+    "code": "KGL",
+    "type": "PROVINCE",
+    "fullPath": "Kigali City",
+    "formattedAddress": "Kigali City",
+    "depthLevel": 0,
+    "isRoot": true,
+    "isLeaf": false
+  },
+  ...
+]
+```
+
+#### Test 4: Get All Villages (Leaf Nodes)
+**Folder:** 0. Hierarchical Locations (NEW) → Get All Villages (Leaf Nodes)  
+**Method:** GET  
+**URL:** `http://localhost:8080/api/hierarchical-locations/villages`
+
+**Expected Response:**
+```json
+[
+  {
+    "locationId": 11,
+    "name": "Nyagatovu",
+    "code": "NYG",
+    "type": "VILLAGE",
+    "fullPath": "Kigali City → Gasabo → Kimironko → Bibare → Nyagatovu",
+    "formattedAddress": "Kigali City, Gasabo, Kimironko, Bibare, Nyagatovu",
+    "depthLevel": 4,
+    "isRoot": false,
+    "isLeaf": true
+  },
+  {
+    "locationId": 12,
+    "name": "Kiyovu",
+    "code": "KIY",
+    "type": "VILLAGE",
+    "fullPath": "Kigali City → Gasabo → Kimisagara → Rugenge → Kiyovu",
+    "formattedAddress": "Kigali City, Gasabo, Kimisagara, Rugenge, Kiyovu",
+    "depthLevel": 4,
+    "isRoot": false,
+    "isLeaf": true
+  }
+]
+```
+
+#### Test 5: Get Children of Location (Tree Navigation)
+**Folder:** 0. Hierarchical Locations (NEW) → Get Children of Location  
+**Method:** GET  
+**URL:** `http://localhost:8080/api/hierarchical-locations/1/children`
+
+**Expected Response:** Districts under Kigali City
+```json
+[
+  {
+    "locationId": 4,
+    "name": "Gasabo",
+    "code": "GAS",
+    "type": "DISTRICT",
+    "fullPath": "Kigali City → Gasabo"
+  },
+  ...
+]
+```
+
+#### Test 6: Get Full Hierarchy Path
+**Folder:** 0. Hierarchical Locations (NEW) → Get Full Hierarchy Path  
+**Method:** GET  
+**URL:** `http://localhost:8080/api/hierarchical-locations/12/path`
+
+**Expected Response:**
+```
+"Kigali City → Gasabo → Kimisagara → Rugenge → Kiyovu"
+```
+
+---
+
+### ✅ **Phase 3: Hierarchical User Registration**
+
+#### Test 7: Register User with Village in Request Body (RECOMMENDED)
+**Folder:** 2. Users - Hierarchical Registration → Register User with Village (Body)  
+**Method:** POST  
+**URL:** `http://localhost:8080/api/users/register`
+
+**Request Body:**
+```json
+{
+  "name": "Hierarchical Test User",
+  "email": "hierarchical.test@example.com",
+  "password": "password123",
+  "phone": "0786789012",
+  "userType": "CLIENT",
+  "villageName": "Kiyovu"
+}
+```
+
+**Expected Response:**
+```json
+{
+  "id": 5,
+  "name": "Hierarchical Test User",
+  "email": "hierarchical.test@example.com",
+  "phone": "0786789012",
+  "userType": "CLIENT",
+  "hierarchicalLocation": {
+    "locationId": 12,
+    "name": "Kiyovu",
+    "code": "KIY",
+    "type": "VILLAGE",
+    "fullPath": "Kigali City → Gasabo → Kimisagara → Rugenge → Kiyovu"
+  },
+  "fullLocation": "Kigali City, Gasabo, Kimisagara, Rugenge, Kiyovu"
+}
+```
+
+#### Test 8: Register User with Village as Parameter
+**Folder:** 2. Users - Hierarchical Registration → Register User with Village (Param)  
+**Method:** POST  
+**URL:** `http://localhost:8080/api/users/register/village?villageName=Nyagatovu`
+
+**Request Body:**
+```json
+{
+  "name": "Village Param User",
+  "email": "village.param@example.com",
+  "password": "password123",
+  "phone": "0786789013",
+  "userType": "PROVIDER"
+}
+```
+
+---
+
+### ✅ **Phase 4: Verify Hierarchical Queries**
+
+#### Test 9: Get Users by Province CODE
+**Folder:** 2. Users - Hierarchical Registration → Get Users by Province CODE  
+**Method:** GET  
+**URL:** `http://localhost:8080/api/users/province/code/KGL`
+
+**Expected:** Should return all users registered in Kigali City province
+
+#### Test 10: Get Users by Village Name
+**Folder:** 2. Users - Hierarchical Registration → Get Users by Village Name  
+**Method:** GET  
+**URL:** `http://localhost:8080/api/users/village/name/Kiyovu`
+
+**Expected:** Should return users registered in Kiyovu village
+
+#### Test 11: Get Users by Location Hierarchy
+**Folder:** 2. Users - Hierarchical Registration → Get Users by Location Hierarchy  
+**Method:** GET  
+**URL:** `http://localhost:8080/api/users/location?provinceCode=KGL&districtName=Gasabo&villageName=Kiyovu`
+
+**Expected:** Should return users matching the complete hierarchy
+
+---
+
+### ✅ **Phase 5: Legacy System Compatibility**
+
+#### Test 12: Get All Village Locations (Legacy)
+**Folder:** 1. Locations (Legacy System) → Get All Village Locations  
 **Method:** GET  
 **URL:** `http://localhost:8080/api/locations/villages`
 
@@ -37,10 +248,8 @@ You'll see a collection called **"FixMatch API - Complete with Location Hierarch
 ]
 ```
 
----
-
-### ✅ Test 2: Get All Village Names Only
-**Folder:** 1. Locations → Get All Village Names Only  
+#### Test 13: Get All Village Names Only (Legacy)
+**Folder:** 1. Locations (Legacy System) → Get All Village Names Only  
 **Method:** GET  
 **URL:** `http://localhost:8080/api/locations/villages/names`
 
@@ -48,6 +257,126 @@ You'll see a collection called **"FixMatch API - Complete with Location Hierarch
 ```json
 [
   "Kiyovu",
+  "Kimihurura",
+  "Kacyiru",
+  "Nyakariro"
+]
+```
+
+---
+
+### ✅ **Phase 6: Advanced Features**
+
+#### Test 14: Search Locations by Name
+**Folder:** 0. Hierarchical Locations (NEW) → Search Locations by Name  
+**Method:** GET  
+**URL:** `http://localhost:8080/api/hierarchical-locations/search?name=Kigali`
+
+#### Test 15: Find Village by Name
+**Folder:** 0. Hierarchical Locations (NEW) → Find Village by Name  
+**Method:** GET  
+**URL:** `http://localhost:8080/api/hierarchical-locations/village/Kiyovu`
+
+#### Test 16: Get Locations by Type
+**Folder:** 0. Hierarchical Locations (NEW) → Get Locations by Type (Villages)  
+**Method:** GET  
+**URL:** `http://localhost:8080/api/hierarchical-locations/type/VILLAGE`
+
+---
+
+## 🎯 **Key Testing Scenarios**
+
+### **Scenario 1: Complete Hierarchical Registration Flow**
+1. Initialize hierarchy → Get villages → Register user → Verify in queries
+2. **Expected:** User appears in all relevant hierarchy levels
+
+### **Scenario 2: Tree Navigation**
+1. Get provinces → Get children → Get grandchildren → Get full path
+2. **Expected:** Complete tree traversal works
+
+### **Scenario 3: Backward Compatibility**
+1. Test both hierarchical and legacy endpoints
+2. **Expected:** Both systems work independently
+
+### **Scenario 4: Village-Based Registration**
+1. Register with village name → Check hierarchical location assignment
+2. **Expected:** User gets complete location hierarchy automatically
+
+---
+
+## 🔍 **Response Validation Checklist**
+
+### ✅ **Hierarchical Location Response**
+- [ ] `locationId` is present and numeric
+- [ ] `name` matches expected location name
+- [ ] `code` is present (may be null for some locations)
+- [ ] `type` is valid enum (PROVINCE, DISTRICT, SECTOR, CELL, VILLAGE)
+- [ ] `fullPath` shows complete hierarchy with → separators
+- [ ] `formattedAddress` shows comma-separated hierarchy
+- [ ] `depthLevel` is correct (0=Province, 4=Village)
+- [ ] `isRoot` and `isLeaf` are correct booleans
+
+### ✅ **User Registration Response**
+- [ ] User has `hierarchicalLocation` object
+- [ ] `fullLocation` shows formatted address
+- [ ] User appears in location-based queries
+- [ ] Village name matches registered location
+
+### ✅ **Tree Navigation Response**
+- [ ] Children endpoint returns direct children only
+- [ ] Path endpoint returns string with → separators
+- [ ] Statistics show correct counts by type
+
+---
+
+## 🐛 **Troubleshooting**
+
+### **"Hierarchy not initialized" Error**
+- **Solution:** Run "Initialize Rwanda Hierarchy" first
+- **Check:** Statistics endpoint should show > 0 locations
+
+### **"Village not found" Error**
+- **Solution:** Use exact village names from villages endpoint
+- **Check:** Village names are case-sensitive
+
+### **Empty Hierarchical Response**
+- **Solution:** Ensure DataSeeder ran successfully
+- **Check:** Application logs for seeding messages
+
+### **Legacy vs Hierarchical Confusion**
+- **Hierarchical:** `/api/hierarchical-locations/*` (NEW)
+- **Legacy:** `/api/locations/*` (Backward compatibility)
+- **Use:** Hierarchical for new features, legacy for compatibility
+
+---
+
+## 🎓 **Computer Science Learning Points**
+
+### **Tree Data Structure Concepts**
+- **Nodes:** Each location is a node in the tree
+- **Edges:** Parent-child relationships between locations
+- **Root:** Provinces (no parent)
+- **Leaves:** Villages (no children)
+- **Depth:** Distance from root (Province=0, Village=4)
+- **Path:** Route from root to any node
+
+### **Adjacency List Model**
+- Each node stores reference to its parent
+- Enables efficient tree traversal
+- Supports recursive operations
+- Scalable for any tree depth
+
+### **Self-Referencing Relationships**
+- Entity references itself via foreign key
+- `@ManyToOne` for parent relationship
+- `@OneToMany` for children relationship
+- Demonstrates advanced JPA mapping
+
+---
+
+**Hierarchical Location Testing Complete!** 🌳✅
+
+You've successfully tested a sophisticated tree data structure implementation in Spring Boot!
   "Kimihurura",
   "Nyarutarama",
   ...

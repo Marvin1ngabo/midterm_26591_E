@@ -1,10 +1,101 @@
-# FixMatch API Endpoints Documentation
+# FixMatch API Endpoints Documentation - Hierarchical Location System
 
 Base URL: `http://localhost:8080`
 
-# FixMatch API Endpoints Documentation
+## 🌳 **Hierarchical Location Endpoints (NEW)**
 
-Base URL: `http://localhost:8080`
+### **Initialize Rwanda Location Hierarchy**
+```http
+POST /api/hierarchical-locations/initialize
+```
+**Description**: Creates the complete Rwanda administrative hierarchy using the Adjacency List Model.
+
+### **Get All Provinces (Root Nodes)**
+```http
+GET /api/hierarchical-locations/provinces
+```
+
+### **Get All Villages (Leaf Nodes)**
+```http
+GET /api/hierarchical-locations/villages
+```
+
+### **Get Location with Full Path**
+```http
+GET /api/hierarchical-locations/1
+```
+**Response Example**:
+```json
+{
+  "locationId": 1,
+  "name": "Kigali City",
+  "code": "KGL",
+  "type": "PROVINCE",
+  "fullPath": "Kigali City",
+  "formattedAddress": "Kigali City",
+  "depthLevel": 0,
+  "isRoot": true,
+  "isLeaf": false
+}
+```
+
+### **Get Children of a Location**
+```http
+GET /api/hierarchical-locations/1/children
+```
+
+### **Get Full Hierarchy Path**
+```http
+GET /api/hierarchical-locations/5/path
+```
+**Response**: `"Kigali City → Gasabo → Kimironko → Bibare → Nyagatovu"`
+
+### **Get Locations by Type**
+```http
+GET /api/hierarchical-locations/type/DISTRICT
+GET /api/hierarchical-locations/type/VILLAGE
+```
+
+### **Search Locations by Name**
+```http
+GET /api/hierarchical-locations/search?name=Kigali
+```
+
+### **Find Village by Name (For Registration)**
+```http
+GET /api/hierarchical-locations/village/Nyagatovu
+```
+
+### **Create New Location**
+```http
+POST /api/hierarchical-locations
+Content-Type: application/json
+
+{
+  "name": "New Village",
+  "code": "NV",
+  "type": "VILLAGE",
+  "parentId": 4
+}
+```
+
+### **Get Hierarchy Statistics**
+```http
+GET /api/hierarchical-locations/statistics
+```
+**Response**:
+```json
+{
+  "totalLocations": 15,
+  "provinces": 5,
+  "districts": 8,
+  "sectors": 2,
+  "cells": 2,
+  "villages": 2
+}
+```
+
+---
 
 ## 📍 Location Endpoints
 
