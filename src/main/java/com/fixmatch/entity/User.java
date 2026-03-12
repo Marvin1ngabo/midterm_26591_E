@@ -7,6 +7,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fixmatch.entity.HierarchicalLocation;
+import com.fixmatch.entity.Location;
 import java.time.LocalDateTime;
 
 /**
@@ -57,16 +60,22 @@ public class User {
     private UserType userType;
 
     /**
-     * Village name for registration (transient field)
+     * Village name for registration (not persisted to database)
      * This field is used during registration to find the location
-     * It's not stored in the database, only used for processing
      */
     @Transient
-    @JsonProperty("villageName")
     private String villageName;
 
     /**
-     * Many-to-One Relationship with Location
+     * Many-to-One Relationship with HierarchicalLocation (NEW SYSTEM)
+     * - Many users can belong to one hierarchical location
+     */
+    @ManyToOne
+    @JoinColumn(name = "hierarchical_location_id")
+    private HierarchicalLocation hierarchicalLocation;
+
+    /**
+     * Many-to-One Relationship with Location (LEGACY SYSTEM - Backward Compatibility)
      * - Many users can belong to one location
      */
     @ManyToOne
@@ -120,15 +129,13 @@ public class User {
     }
 
     /**
-     * Get full location string (Village, Cell, Sector, District, Province)
+     * Get full location string using hierarchical location (preferred) or legacy location
      */
     public String getFullLocation() {
-        if (location != null) {
+        if (hierarchicalLocation != null) {
+            return hierarchicalLocation.getFormattedAddress();
+        } else if (location != null) {
             return location.getFullAddress();
-        }
-        // Debug: show if villageName was received
-        if (villageName != null) {
-            return "Village name received: " + villageName + " (but location not set)";
         }
         return "Location not set";
     }
@@ -140,6 +147,6 @@ public class User {
         return name != null && !name.trim().isEmpty() &&
                email != null && !email.trim().isEmpty() &&
                phone != null && !phone.trim().isEmpty() &&
-               location != null;
+               (hierarchicalLocation != null || location != null);
     }
 }

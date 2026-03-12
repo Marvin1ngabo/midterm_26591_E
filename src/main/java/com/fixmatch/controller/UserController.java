@@ -44,22 +44,16 @@ public class UserController {
      */
     @PostMapping("/register")
     public ResponseEntity<User> registerUser(
-            @RequestBody UserRegistrationRequest request,
+            @RequestBody User user,
             @RequestParam(required = false) Long locationId) {
         try {
             User registered;
             if (locationId != null) {
                 // Legacy: use locationId parameter
-                User user = new User();
-                user.setName(request.getName());
-                user.setEmail(request.getEmail());
-                user.setPassword(request.getPassword());
-                user.setPhone(request.getPhone());
-                user.setUserType(request.getUserType());
                 registered = userService.registerUser(user, locationId);
             } else {
-                // New: use villageName in request body
-                registered = userService.registerUserFromRequest(request);
+                // New: use villageName in request body or regular registration
+                registered = userService.registerUser(user);
             }
             return new ResponseEntity<>(registered, HttpStatus.CREATED);
         } catch (RuntimeException e) {

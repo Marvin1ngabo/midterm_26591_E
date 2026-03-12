@@ -3,9 +3,12 @@ package com.fixmatch.service;
 import com.fixmatch.entity.User;
 import com.fixmatch.entity.UserType;
 import com.fixmatch.entity.Location;
+import com.fixmatch.entity.HierarchicalLocation;
+import com.fixmatch.entity.LocationType;
 import com.fixmatch.dto.UserRegistrationRequest;
 import com.fixmatch.repository.UserRepository;
 import com.fixmatch.repository.LocationRepository;
+import com.fixmatch.repository.HierarchicalLocationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,6 +24,7 @@ import java.util.List;
  * 1. existsBy() methods (Requirement #7)
  * 2. Pagination and Sorting (Requirement #3)
  * 3. Retrieve users by province (Requirement #8)
+ * 4. Hierarchical location support with village-based registration
  */
 @Service
 @Transactional
@@ -28,6 +32,9 @@ public class UserService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private HierarchicalLocationRepository hierarchicalLocationRepository;
 
     @Autowired
     private LocationRepository locationRepository;
@@ -53,11 +60,19 @@ public class UserService {
         user.setPhone(request.getPhone());
         user.setUserType(request.getUserType());
         
-        // Handle village-based location mapping
+        // Handle village-based hierarchical location mapping
         if (request.getVillageName() != null && !request.getVillageName().trim().isEmpty()) {
-            Location location = locationRepository.findByVillageName(request.getVillageName())
+            HierarchicalLocation hierarchicalLocation = hierarchicalLocationRepository
+                .findByNameAndType(request.getVillageName(), LocationType.VILLAGE)
                 .orElseThrow(() -> new RuntimeException("Village not found: " + request.getVillageName()));
-            user.setLocation(location);
+            user.setHierarchicalLocation(hierarchicalLocation);
+            
+            // Also set legacy location for backward compatibility
+            Location legacyLocation = locationRepository.findByVillageName(request.getVillageName())
+                .stream().findFirst().orElse(null);
+            if (legacyLocation != null) {
+                user.setLocation(legacyLocation);
+            }
         }
         
         // In real app, hash password here
@@ -85,11 +100,19 @@ public class UserService {
             throw new RuntimeException("Phone number already exists: " + user.getPhone());
         }
         
-        // Handle village-based location mapping
+        // Handle village-based hierarchical location mapping
         if (user.getVillageName() != null && !user.getVillageName().trim().isEmpty()) {
-            Location location = locationRepository.findByVillageName(user.getVillageName())
+            HierarchicalLocation hierarchicalLocation = hierarchicalLocationRepository
+                .findByNameAndType(user.getVillageName(), LocationType.VILLAGE)
                 .orElseThrow(() -> new RuntimeException("Village not found: " + user.getVillageName()));
-            user.setLocation(location);
+            user.setHierarchicalLocation(hierarchicalLocation);
+            
+            // Also set legacy location for backward compatibility
+            Location legacyLocation = locationRepository.findByVillageName(user.getVillageName())
+                .stream().findFirst().orElse(null);
+            if (legacyLocation != null) {
+                user.setLocation(legacyLocation);
+            }
         }
         
         // In real app, hash password here
@@ -128,7 +151,7 @@ public class UserService {
             throw new RuntimeException("Phone number already exists: " + user.getPhone());
         }
         
-        // Set location if provided
+        // Set location if provided (legacy system)
         if (locationId != null) {
             Location location = locationRepository.findById(locationId)
                 .orElseThrow(() -> new RuntimeException("Location not found with id: " + locationId));
@@ -279,7 +302,14 @@ public class UserService {
         // Update fields
         existingUser.setName(updatedUser.getName());
         existingUser.setPhone(updatedUser.getPhone());
-        existingUser.setLocation(updatedUser.getLocation());
+        
+        // Update both hierarchical and legacy locations if provided
+        if (updatedUser.getHierarchicalLocation() != null) {
+            existingUser.setHierarchicalLocation(updatedUser.getHierarchicalLocation());
+        }
+        if (updatedUser.getLocation() != null) {
+            existingUser.setLocation(updatedUser.getLocation());
+        }
         
         return userRepository.save(existingUser);
     }
