@@ -121,6 +121,27 @@ GET /api/users/village/name/Kiyovu
 GET /api/users/location?provinceName=Kigali%20City&districtName=Gasabo&villageName=Kiyovu
 ```
 
+## 📊 **Entity Relationship Diagram (ERD)**
+
+![FixMatch ERD](./fixmatch-er-diagram.png)
+
+**Database Schema Overview:**
+The ER diagram above illustrates the complete database structure of the FixMatch system, showcasing:
+
+- **🌳 Hierarchical Location System**: Self-referencing Location entity with parent-child relationships
+- **👤 User Management**: Central User entity with optional ProviderProfile extension
+- **🔗 Complex Relationships**: All relationship types (One-to-One, One-to-Many, Many-to-Many, Self-referencing)
+- **📋 Job Management**: Complete job lifecycle with client-provider relationships
+- **🛠️ Skills & Categories**: Flexible skill assignment and service categorization
+- **🏷️ Enums**: LocationType, UserType, and JobStatus for data integrity
+
+**Key Relationship Highlights:**
+- **Location ↔ Location** (Self-referencing): Enables unlimited hierarchy depth
+- **User ↔ ProviderProfile** (One-to-One): Optional provider extension
+- **ProviderProfile ↔ Skill** (Many-to-Many): Flexible skill assignment via junction table
+- **Location → User/Job** (One-to-Many): Hierarchical location-based queries
+- **User → Job** (Dual roles): Same user can be both client and provider
+
 ## 🚀 **Quick Start Guide**
 
 ### **Prerequisites**
