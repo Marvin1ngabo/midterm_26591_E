@@ -1,20 +1,24 @@
 package com.fixmatch.controller;
 
+import com.fixmatch.dto.LocationDTO;
 import com.fixmatch.entity.Location;
+import com.fixmatch.entity.LocationType;
 import com.fixmatch.service.LocationService;
+import com.fixmatch.util.LocationMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.Optional;
 
 /**
- * LocationController - REST API endpoints for Location entity
+ * LocationController - REST API for hierarchical location operations
  * 
- * Base URL: /api/locations
+ * Demonstrates:
+ * 1. Tree data structure operations via REST API
+ * 2. Hierarchical location management
+ * 3. Self-referencing relationship handling
+ * 4. DTO pattern for JSON serialization
  */
 @RestController
 @RequestMapping("/api/locations")
@@ -25,196 +29,198 @@ public class LocationController {
     private LocationService locationService;
 
     /**
-     * REQUIREMENT #2: Save Location
-     * 
-     * POST /api/locations
-     * Body: { "provinceCode": "KGL", "provinceName": "Kigali", "districtName": "Gasabo", "sectorName": "Kimisagara", "cellName": "Rugenge", "villageName": "Kiyovu" }
+     * Initialize Rwanda administrative hierarchy
      */
-    @PostMapping
-    public ResponseEntity<Location> createLocation(@RequestBody Location location) {
+    @PostMapping("/initialize")
+    public ResponseEntity<String> initializeHierarchy() {
         try {
-            Location saved = locationService.saveLocation(location);
-            return new ResponseEntity<>(saved, HttpStatus.CREATED);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+            locationService.buildRwandaHierarchy();
+            return ResponseEntity.ok("Rwanda location hierarchy initialized successfully!");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error initializing hierarchy: " + e.getMessage());
         }
     }
 
     /**
-     * Get all locations
-     * 
-     * GET /api/locations
+     * Get all provinces (root nodes)
      */
-    @GetMapping
-    public ResponseEntity<List<Location>> getAllLocations() {
-        List<Location> locations = locationService.getAllLocations();
-        return ResponseEntity.ok(locations);
+    @GetMapping("/provinces")
+    public ResponseEntity<List<LocationDTO>> getAllProvinces() {
+        try {
+            List<Location> provinces = locationService.getAllProvinces();
+            List<LocationDTO> provinceDTOs = LocationMapper.toDTOList(provinces);
+            return ResponseEntity.ok(provinceDTOs);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     /**
-     * Get location by ID
-     * 
-     * GET /api/locations/{id}
+     * Get all villages (leaf nodes)
+     */
+    @GetMapping("/villages")
+    public ResponseEntity<List<LocationDTO>> getAllVillages() {
+        try {
+            List<Location> villages = locationService.getAllVillages();
+            List<LocationDTO> villageDTOs = LocationMapper.toDTOList(villages);
+            return ResponseEntity.ok(villageDTOs);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    /**
+     * Get location by ID with full hierarchy information
      */
     @GetMapping("/{id}")
-    public ResponseEntity<Location> getLocationById(@PathVariable Long id) {
+    public ResponseEntity<LocationDTO> getLocationById(@PathVariable Long id) {
         try {
             Location location = locationService.getLocationById(id);
-            return ResponseEntity.ok(location);
-        } catch (RuntimeException e) {
+            LocationDTO locationDTO = LocationMapper.toDTO(location);
+            return ResponseEntity.ok(locationDTO);
+        } catch (Exception e) {
             return ResponseEntity.notFound().build();
         }
     }
 
     /**
-     * Get all unique provinces
-     * 
-     * GET /api/locations/provinces
+     * Get children of a specific location
      */
-    @GetMapping("/provinces")
-    public ResponseEntity<List<Object[]>> getAllProvinces() {
-        List<Object[]> provinces = locationService.getAllProvinces();
-        return ResponseEntity.ok(provinces);
+    @GetMapping("/{id}/children")
+    public ResponseEntity<List<LocationDTO>> getChildren(@PathVariable Long id) {
+        try {
+            List<Location> children = locationService.getChildren(id);
+            List<LocationDTO> childrenDTOs = LocationMapper.toDTOList(children);
+            return ResponseEntity.ok(childrenDTOs);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     /**
-     * Get locations by province code
-     * 
-     * GET /api/locations/province/{code}
+     * Get full hierarchy path for a location
      */
-    @GetMapping("/province/{code}")
-    public ResponseEntity<List<Location>> getLocationsByProvinceCode(@PathVariable String code) {
-        List<Location> locations = locationService.getLocationsByProvinceCode(code);
-        return ResponseEntity.ok(locations);
+    @GetMapping("/{id}/path")
+    public ResponseEntity<String> getFullPath(@PathVariable Long id) {
+        try {
+            String fullPath = locationService.getFullPath(id);
+            return ResponseEntity.ok(fullPath);
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     /**
-     * REQUIREMENT #3: Get locations by province with Pagination
-     * 
-     * GET /api/locations/province/{code}/paginated?page=0&size=10
+     * Get locations by type
      */
-    @GetMapping("/province/{code}/paginated")
-    public ResponseEntity<Page<Location>> getLocationsByProvinceCodePageable(
-            @PathVariable String code,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        
-        Pageable pageable = PageRequest.of(page, size);
-        Page<Location> locations = locationService.getLocationsByProvinceCode(code, pageable);
-        return ResponseEntity.ok(locations);
+    @GetMapping("/type/{type}")
+    public ResponseEntity<List<LocationDTO>> getLocationsByType(@PathVariable LocationType type) {
+        try {
+            List<Location> locations = locationService.getLocationsByType(type);
+            List<LocationDTO> locationDTOs = LocationMapper.toDTOList(locations);
+            return ResponseEntity.ok(locationDTOs);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     /**
-     * Get districts by province code
-     * 
-     * GET /api/locations/province/{code}/districts
-     */
-    @GetMapping("/province/{code}/districts")
-    public ResponseEntity<List<String>> getDistrictsByProvinceCode(@PathVariable String code) {
-        List<String> districts = locationService.getDistrictsByProvinceCode(code);
-        return ResponseEntity.ok(districts);
-    }
-
-    /**
-     * Get sectors by province and district
-     * 
-     * GET /api/locations/province/{code}/district/{district}/sectors
-     */
-    @GetMapping("/province/{code}/district/{district}/sectors")
-    public ResponseEntity<List<String>> getSectorsByProvinceAndDistrict(
-            @PathVariable String code, 
-            @PathVariable String district) {
-        List<String> sectors = locationService.getSectorsByProvinceAndDistrict(code, district);
-        return ResponseEntity.ok(sectors);
-    }
-
-    /**
-     * REQUIREMENT #7: Check if province exists
-     * 
-     * GET /api/locations/province/{code}/exists
-     */
-    @GetMapping("/province/{code}/exists")
-    public ResponseEntity<Boolean> provinceExists(@PathVariable String code) {
-        boolean exists = locationService.provinceExists(code);
-        return ResponseEntity.ok(exists);
-    }
-
-    /**
-     * REQUIREMENT #7: Check if district exists in province
-     * 
-     * GET /api/locations/province/{code}/district/{district}/exists
-     */
-    @GetMapping("/province/{code}/district/{district}/exists")
-    public ResponseEntity<Boolean> districtExistsInProvince(
-            @PathVariable String code, 
-            @PathVariable String district) {
-        boolean exists = locationService.districtExistsInProvince(code, district);
-        return ResponseEntity.ok(exists);
-    }
-
-    /**
-     * Get locations by level
-     * 
-     * GET /api/locations/level/{level}
-     */
-    @GetMapping("/level/{level}")
-    public ResponseEntity<List<Location>> getLocationsByLevel(@PathVariable String level) {
-        List<Location> locations = locationService.getLocationsByLevel(level);
-        return ResponseEntity.ok(locations);
-    }
-
-    /**
-     * Search locations by keyword
-     * 
-     * GET /api/locations/search?keyword=gasabo
+     * Search locations by name
      */
     @GetMapping("/search")
-    public ResponseEntity<List<Location>> searchLocations(@RequestParam String keyword) {
-        List<Location> locations = locationService.searchLocations(keyword);
-        return ResponseEntity.ok(locations);
+    public ResponseEntity<List<LocationDTO>> searchLocations(@RequestParam String name) {
+        try {
+            List<Location> locations = locationService.searchLocationsByName(name);
+            List<LocationDTO> locationDTOs = LocationMapper.toDTOList(locations);
+            return ResponseEntity.ok(locationDTOs);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     /**
-     * Get location statistics
-     * 
-     * GET /api/locations/statistics
+     * Find village by name (for user registration)
+     */
+    @GetMapping("/village/{villageName}")
+    public ResponseEntity<LocationDTO> findVillageByName(@PathVariable String villageName) {
+        try {
+            Optional<Location> village = locationService.findVillageByName(villageName);
+            if (village.isPresent()) {
+                LocationDTO villageDTO = LocationMapper.toDTO(village.get());
+                return ResponseEntity.ok(villageDTO);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    /**
+     * Get hierarchy statistics
      */
     @GetMapping("/statistics")
-    public ResponseEntity<LocationService.LocationStatistics> getLocationStatistics() {
-        LocationService.LocationStatistics stats = locationService.getLocationStatistics();
-        return ResponseEntity.ok(stats);
+    public ResponseEntity<LocationService.LocationStatistics> getStatistics() {
+        try {
+            LocationService.LocationStatistics stats = locationService.getLocationStatistics();
+            return ResponseEntity.ok(stats);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     /**
-     * Get complete hierarchy locations
-     * 
-     * GET /api/locations/complete
+     * Create new location
      */
-    @GetMapping("/complete")
-    public ResponseEntity<List<Location>> getCompleteHierarchyLocations() {
-        List<Location> locations = locationService.getCompleteHierarchyLocations();
-        return ResponseEntity.ok(locations);
+    @PostMapping
+    public ResponseEntity<LocationDTO> createLocation(@RequestBody CreateLocationRequest request) {
+        try {
+            Location location = locationService.createLocation(
+                request.getName(), 
+                request.getCode(), 
+                request.getType(), 
+                request.getParentId()
+            );
+            LocationDTO locationDTO = LocationMapper.toDTO(location);
+            return ResponseEntity.ok(locationDTO);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     /**
-     * Get all villages for user registration
-     * 
-     * GET /api/locations/villages
+     * Delete location (only if no children)
      */
-    @GetMapping("/villages")
-    public ResponseEntity<List<Location>> getAllVillageLocations() {
-        List<Location> villages = locationService.getAllVillageLocations();
-        return ResponseEntity.ok(villages);
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteLocation(@PathVariable Long id) {
+        try {
+            locationService.deleteLocation(id);
+            return ResponseEntity.ok("Location deleted successfully");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error deleting location: " + e.getMessage());
+        }
     }
 
     /**
-     * Get all village names only
-     * 
-     * GET /api/locations/villages/names
+     * Request DTO for creating locations
      */
-    @GetMapping("/villages/names")
-    public ResponseEntity<List<String>> getAllVillageNames() {
-        List<String> villageNames = locationService.getAllVillageNames();
-        return ResponseEntity.ok(villageNames);
+    public static class CreateLocationRequest {
+        private String name;
+        private String code;
+        private LocationType type;
+        private Long parentId;
+
+        // Getters and setters
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+        
+        public String getCode() { return code; }
+        public void setCode(String code) { this.code = code; }
+        
+        public LocationType getType() { return type; }
+        public void setType(LocationType type) { this.type = type; }
+        
+        public Long getParentId() { return parentId; }
+        public void setParentId(Long parentId) { this.parentId = parentId; }
     }
 }

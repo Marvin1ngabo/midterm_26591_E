@@ -4,14 +4,18 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
- * Location Entity - Represents complete hierarchical location data
+ * Location Entity - Represents hierarchical location data using Adjacency List Model
  * 
  * This entity demonstrates:
- * 1. Single table for all location levels
- * 2. Hierarchical data structure
- * 3. Complete Rwanda administrative divisions
+ * 1. Self-referencing relationship (parent-child)
+ * 2. Tree data structure for geographical hierarchy
+ * 3. Adjacency List Model implementation
  * 
  * Hierarchy: Province → District → Sector → Cell → Village
  */
@@ -20,91 +24,177 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Location {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "location_id")
+    private Long locationId;
 
-    // Province level
-    @Column(name = "province_code", nullable = false, length = 10)
-    private String provinceCode; // e.g., "KGL", "EST", "WST"
+    @Column(name = "name", nullable = false, length = 100)
+    private String name; // e.g., "Kigali City", "Gasabo", "Kimironko"
 
-    @Column(name = "province_name", nullable = false, length = 100)
-    private String provinceName; // e.g., "Kigali", "Eastern Province"
+    @Column(name = "code", length = 10)
+    private String code; // e.g., "KGL", "GAS", "KIM"
 
-    // District level
-    @Column(name = "district_name", nullable = false, length = 100)
-    private String districtName; // e.g., "Gasabo", "Kicukiro"
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type", nullable = false)
+    private LocationType type; // PROVINCE, DISTRICT, SECTOR, CELL, VILLAGE
 
-    // Sector level
-    @Column(name = "sector_name", length = 100)
-    private String sectorName; // e.g., "Kimisagara", "Nyamirambo"
+    /**
+     * Self-referencing relationship - Parent Location
+     * Many locations can belong to one parent location
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_location_id")
+    @JsonIgnore // Prevent infinite recursion in JSON serialization
+    private Location parentLocation;
 
-    // Cell level
-    @Column(name = "cell_name", length = 100)
-    private String cellName; // e.g., "Rugenge", "Nyakabanda"
+    /**
+     * Self-referencing relationship - Child Locations
+     * One location can have many child locations
+     */
+    @OneToMany(mappedBy = "parentLocation", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore // Prevent infinite recursion in JSON serialization
+    private List<Location> childLocations = new ArrayList<>();
 
-    // Village level
-    @Column(name = "village_name", length = 100)
-    private String villageName; // e.g., "Kiyovu", "Kimihurura"
-
-    // Utility constructor for Province and District only
-    public Location(String provinceCode, String provinceName, String districtName) {
-        this.provinceCode = provinceCode;
-        this.provinceName = provinceName;
-        this.districtName = districtName;
+    // Constructors for different scenarios
+    public Location(String name, String code, LocationType type) {
+        this.name = name;
+        this.code = code;
+        this.type = type;
     }
 
-    // Utility constructor for complete hierarchy
-    public Location(String provinceCode, String provinceName, String districtName, 
-                   String sectorName, String cellName, String villageName) {
-        this.provinceCode = provinceCode;
-        this.provinceName = provinceName;
-        this.districtName = districtName;
-        this.sectorName = sectorName;
-        this.cellName = cellName;
-        this.villageName = villageName;
+    public Location(String name, String code, LocationType type, Location parent) {
+        this.name = name;
+        this.code = code;
+        this.type = type;
+        this.parentLocation = parent;
     }
 
     /**
-     * Get formatted full address
+     * Get full location path from root to current location
+     * Example: "Kigali City → Gasabo → Kimironko → Bibare → Nyagatovu"
      */
-    public String getFullAddress() {
-        StringBuilder address = new StringBuilder();
+    public String getFullPath() {
+        List<String> path = new ArrayList<>();
+        Location current = this;
         
-        if (villageName != null) address.append(villageName).append(", ");
-        if (cellName != null) address.append(cellName).append(", ");
-        if (sectorName != null) address.append(sectorName).append(", ");
-        address.append(districtName).append(", ");
-        address.append(provinceName);
+        // Build path from current location up to root
+        while (current != null) {
+            path.add(0, current.getName()); // Add at beginning to reverse order
+            current = current.getParentLocation();
+        }
         
-        return address.toString();
+        return String.join(" → ", path);
     }
 
     /**
-     * Get short address (District, Province)
+     * Get all ancestors (parent, grandparent, etc.) up to root
      */
-    public String getShortAddress() {
-        return districtName + ", " + provinceName;
+    public List<Location> getAncestors() {
+        List<Location> ancestors = new ArrayList<>();
+        Location current = this.parentLocation;
+        
+        while (current != null) {
+            ancestors.add(current);
+            current = current.getParentLocation();
+        }
+        
+        return ancestors;
     }
 
     /**
-     * Check if location has complete hierarchy
+     * Get root location (Province level)
      */
-    public boolean isCompleteHierarchy() {
-        return provinceCode != null && provinceName != null && 
-               districtName != null && sectorName != null && 
-               cellName != null && villageName != null;
+    public Location getRoot() {
+        Location current = this;
+        while (current.getParentLocation() != null) {
+            current = current.getParentLocation();
+        }
+        return current;
     }
 
     /**
-     * Get location level (how detailed the location is)
+     * Check if this location is a root (has no parent)
      */
-    public String getLocationLevel() {
-        if (villageName != null) return "Village";
-        if (cellName != null) return "Cell";
-        if (sectorName != null) return "Sector";
-        return "District";
+    public boolean isRoot() {
+        return parentLocation == null;
+    }
+
+    /**
+     * Check if this location is a leaf (has no children)
+     */
+    public boolean isLeaf() {
+        return childLocations.isEmpty();
+    }
+
+    /**
+     * Get depth level in hierarchy (0 = root/province, 4 = village)
+     */
+    public int getDepthLevel() {
+        int depth = 0;
+        Location current = this;
+        while (current.getParentLocation() != null) {
+            depth++;
+            current = current.getParentLocation();
+        }
+        return depth;
+    }
+
+    /**
+     * Add child location
+     */
+    public void addChild(Location child) {
+        childLocations.add(child);
+        child.setParentLocation(this);
+    }
+
+    /**
+     * Remove child location
+     */
+    public void removeChild(Location child) {
+        childLocations.remove(child);
+        child.setParentLocation(null);
+    }
+
+    /**
+     * Get location at specific type in the hierarchy
+     * Example: getLocationByType(LocationType.PROVINCE) returns the province
+     */
+    public Location getLocationByType(LocationType targetType) {
+        Location current = this;
+        
+        // Go up the hierarchy to find the target type
+        while (current != null) {
+            if (current.getType() == targetType) {
+                return current;
+            }
+            current = current.getParentLocation();
+        }
+        
+        return null; // Type not found in hierarchy
+    }
+
+    /**
+     * Get formatted address string
+     */
+    public String getFormattedAddress() {
+        List<String> addressParts = new ArrayList<>();
+        Location current = this;
+        
+        // Build address from current location up to province
+        while (current != null) {
+            addressParts.add(0, current.getName());
+            current = current.getParentLocation();
+        }
+        
+        return String.join(", ", addressParts);
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s (%s) - %s", name, type, code != null ? code : "No Code");
     }
 }

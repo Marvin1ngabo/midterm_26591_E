@@ -3,12 +3,10 @@ package com.fixmatch.service;
 import com.fixmatch.entity.User;
 import com.fixmatch.entity.UserType;
 import com.fixmatch.entity.Location;
-import com.fixmatch.entity.HierarchicalLocation;
 import com.fixmatch.entity.LocationType;
 import com.fixmatch.dto.UserRegistrationRequest;
 import com.fixmatch.repository.UserRepository;
 import com.fixmatch.repository.LocationRepository;
-import com.fixmatch.repository.HierarchicalLocationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,9 +30,6 @@ public class UserService {
 
     @Autowired
     private UserRepository userRepository;
-
-    @Autowired
-    private HierarchicalLocationRepository hierarchicalLocationRepository;
 
     @Autowired
     private LocationRepository locationRepository;
@@ -62,17 +57,10 @@ public class UserService {
         
         // Handle village-based hierarchical location mapping
         if (request.getVillageName() != null && !request.getVillageName().trim().isEmpty()) {
-            HierarchicalLocation hierarchicalLocation = hierarchicalLocationRepository
+            Location location = locationRepository
                 .findByNameAndType(request.getVillageName(), LocationType.VILLAGE)
                 .orElseThrow(() -> new RuntimeException("Village not found: " + request.getVillageName()));
-            user.setHierarchicalLocation(hierarchicalLocation);
-            
-            // Also set legacy location for backward compatibility
-            Location legacyLocation = locationRepository.findByVillageName(request.getVillageName())
-                .stream().findFirst().orElse(null);
-            if (legacyLocation != null) {
-                user.setLocation(legacyLocation);
-            }
+            user.setLocation(location);
         }
         
         // In real app, hash password here
@@ -102,17 +90,10 @@ public class UserService {
         
         // Handle village-based hierarchical location mapping
         if (user.getVillageName() != null && !user.getVillageName().trim().isEmpty()) {
-            HierarchicalLocation hierarchicalLocation = hierarchicalLocationRepository
+            Location location = locationRepository
                 .findByNameAndType(user.getVillageName(), LocationType.VILLAGE)
                 .orElseThrow(() -> new RuntimeException("Village not found: " + user.getVillageName()));
-            user.setHierarchicalLocation(hierarchicalLocation);
-            
-            // Also set legacy location for backward compatibility
-            Location legacyLocation = locationRepository.findByVillageName(user.getVillageName())
-                .stream().findFirst().orElse(null);
-            if (legacyLocation != null) {
-                user.setLocation(legacyLocation);
-            }
+            user.setLocation(location);
         }
         
         // In real app, hash password here
@@ -261,9 +242,9 @@ public class UserService {
      * - Province + District + Sector + Cell (optional)
      * - Province + District + Sector + Cell + Village (optional)
      */
-    public List<User> getUsersByLocationHierarchy(String provinceCode, String districtName, 
+    public List<User> getUsersByLocationHierarchy(String provinceName, String districtName, 
                                                  String sectorName, String cellName, String villageName) {
-        return userRepository.findUsersByLocationHierarchy(provinceCode, districtName, 
+        return userRepository.findUsersByLocationHierarchy(provinceName, districtName, 
                                                           sectorName, cellName, villageName);
     }
 
@@ -304,9 +285,6 @@ public class UserService {
         existingUser.setPhone(updatedUser.getPhone());
         
         // Update both hierarchical and legacy locations if provided
-        if (updatedUser.getHierarchicalLocation() != null) {
-            existingUser.setHierarchicalLocation(updatedUser.getHierarchicalLocation());
-        }
         if (updatedUser.getLocation() != null) {
             existingUser.setLocation(updatedUser.getLocation());
         }

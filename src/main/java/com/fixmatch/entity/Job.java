@@ -164,7 +164,7 @@ public class Job {
      */
     public String getJobLocation() {
         if (location != null) {
-            return location.getFullAddress();
+            return location.getFormattedAddress();
         }
         return "Location not set";
     }

@@ -63,50 +63,48 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     /**
      * REQUIREMENT #8: Retrieve all users from a given province using province CODE
-     * 
-     * Logic:
-     * - Join User → Location
-     * - Filter by province code
-     * 
-     * JPQL Query:
-     * SELECT u FROM User u 
-     * JOIN u.location l 
-     * WHERE l.provinceCode = :provinceCode
+     * Simplified: Find users by location code (any level)
      */
-    @Query("SELECT u FROM User u JOIN u.location l WHERE l.provinceCode = :provinceCode")
+    @Query("SELECT u FROM User u JOIN u.location l WHERE l.code = :provinceCode")
     List<User> findUsersByProvinceCode(@Param("provinceCode") String provinceCode);
 
     /**
      * REQUIREMENT #8: Retrieve all users from a given province using province NAME
-     * 
-     * Logic: Same as above but filter by province name
+     * Uses hierarchical location traversal to find users in any location within the province
      */
-    @Query("SELECT u FROM User u JOIN u.location l WHERE l.provinceName = :provinceName")
+    @Query("SELECT u FROM User u JOIN u.location l " +
+           "WHERE l.name = :provinceName AND l.type = 'PROVINCE' " +
+           "OR (l.parentLocation.name = :provinceName AND l.parentLocation.type = 'PROVINCE') " +
+           "OR (l.parentLocation.parentLocation.name = :provinceName AND l.parentLocation.parentLocation.type = 'PROVINCE') " +
+           "OR (l.parentLocation.parentLocation.parentLocation.name = :provinceName AND l.parentLocation.parentLocation.parentLocation.type = 'PROVINCE') " +
+           "OR (l.parentLocation.parentLocation.parentLocation.parentLocation.name = :provinceName AND l.parentLocation.parentLocation.parentLocation.parentLocation.type = 'PROVINCE')")
     List<User> findUsersByProvinceName(@Param("provinceName") String provinceName);
 
     /**
      * Find providers by province code with Pagination
-     * 
-     * This combines:
-     * - Province filtering
-     * - User type filtering
-     * - Pagination
+     * Simplified version
      */
     @Query("SELECT u FROM User u JOIN u.location l " +
-           "WHERE l.provinceCode = :provinceCode AND u.userType IN ('PROVIDER', 'BOTH')")
+           "WHERE u.userType IN ('PROVIDER', 'BOTH') AND l.code = :provinceCode")
     Page<User> findProvidersByProvinceCode(@Param("provinceCode") String provinceCode, Pageable pageable);
 
     /**
      * Find providers by province name with Pagination
+     * Uses hierarchical location traversal
      */
     @Query("SELECT u FROM User u JOIN u.location l " +
-           "WHERE l.provinceName = :provinceName AND u.userType IN ('PROVIDER', 'BOTH')")
+           "WHERE u.userType IN ('PROVIDER', 'BOTH') AND (" +
+           "(l.name = :provinceName AND l.type = 'PROVINCE') " +
+           "OR (l.parentLocation.name = :provinceName AND l.parentLocation.type = 'PROVINCE') " +
+           "OR (l.parentLocation.parentLocation.name = :provinceName AND l.parentLocation.parentLocation.type = 'PROVINCE') " +
+           "OR (l.parentLocation.parentLocation.parentLocation.name = :provinceName AND l.parentLocation.parentLocation.parentLocation.type = 'PROVINCE') " +
+           "OR (l.parentLocation.parentLocation.parentLocation.parentLocation.name = :provinceName AND l.parentLocation.parentLocation.parentLocation.parentLocation.type = 'PROVINCE'))")
     Page<User> findProvidersByProvinceName(@Param("provinceName") String provinceName, Pageable pageable);
 
     /**
      * Find users by location
      */
-    List<User> findByLocationId(Long locationId);
+    List<User> findByLocationLocationId(Long locationId);
 
     /**
      * Find verified providers with pagination and sorting
@@ -155,40 +153,54 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> searchByName(@Param("name") String name);
 
     /**
-     * Find users by district name
+     * Find users by district name - Uses hierarchical location traversal
      */
-    @Query("SELECT u FROM User u JOIN u.location l WHERE l.districtName = :districtName")
+    @Query("SELECT u FROM User u JOIN u.location l " +
+           "WHERE l.name = :districtName AND l.type = 'DISTRICT' " +
+           "OR (l.parentLocation.name = :districtName AND l.parentLocation.type = 'DISTRICT') " +
+           "OR (l.parentLocation.parentLocation.name = :districtName AND l.parentLocation.parentLocation.type = 'DISTRICT') " +
+           "OR (l.parentLocation.parentLocation.parentLocation.name = :districtName AND l.parentLocation.parentLocation.parentLocation.type = 'DISTRICT')")
     List<User> findUsersByDistrictName(@Param("districtName") String districtName);
 
     /**
-     * Find users by sector name
+     * Find users by sector name - Uses hierarchical location traversal
      */
-    @Query("SELECT u FROM User u JOIN u.location l WHERE l.sectorName = :sectorName")
+    @Query("SELECT u FROM User u JOIN u.location l " +
+           "WHERE l.name = :sectorName AND l.type = 'SECTOR' " +
+           "OR (l.parentLocation.name = :sectorName AND l.parentLocation.type = 'SECTOR') " +
+           "OR (l.parentLocation.parentLocation.name = :sectorName AND l.parentLocation.parentLocation.type = 'SECTOR')")
     List<User> findUsersBySectorName(@Param("sectorName") String sectorName);
 
     /**
-     * Find users by cell name
+     * Find users by cell name - Uses hierarchical location traversal
      */
-    @Query("SELECT u FROM User u JOIN u.location l WHERE l.cellName = :cellName")
+    @Query("SELECT u FROM User u JOIN u.location l " +
+           "WHERE l.name = :cellName AND l.type = 'CELL' " +
+           "OR (l.parentLocation.name = :cellName AND l.parentLocation.type = 'CELL')")
     List<User> findUsersByCellName(@Param("cellName") String cellName);
 
     /**
-     * Find users by village name
+     * Find users by village name - Direct match since users are typically linked to villages
      */
-    @Query("SELECT u FROM User u JOIN u.location l WHERE l.villageName = :villageName")
+    @Query("SELECT u FROM User u JOIN u.location l WHERE l.name = :villageName AND l.type = 'VILLAGE'")
     List<User> findUsersByVillageName(@Param("villageName") String villageName);
 
     /**
-     * Find users by complete location hierarchy
+     * Find users by complete location hierarchy - Hierarchical approach
+     * Searches from most specific (village) to least specific (province)
      */
     @Query("SELECT u FROM User u JOIN u.location l " +
-           "WHERE l.provinceCode = :provinceCode " +
-           "AND l.districtName = :districtName " +
-           "AND (:sectorName IS NULL OR l.sectorName = :sectorName) " +
-           "AND (:cellName IS NULL OR l.cellName = :cellName) " +
-           "AND (:villageName IS NULL OR l.villageName = :villageName)")
+           "WHERE (:villageName IS NOT NULL AND l.name = :villageName AND l.type = 'VILLAGE') " +
+           "OR (:villageName IS NULL AND :cellName IS NOT NULL AND " +
+           "    (l.name = :cellName AND l.type = 'CELL' OR l.parentLocation.name = :cellName AND l.parentLocation.type = 'CELL')) " +
+           "OR (:villageName IS NULL AND :cellName IS NULL AND :sectorName IS NOT NULL AND " +
+           "    (l.name = :sectorName AND l.type = 'SECTOR' OR l.parentLocation.name = :sectorName AND l.parentLocation.type = 'SECTOR' OR l.parentLocation.parentLocation.name = :sectorName AND l.parentLocation.parentLocation.type = 'SECTOR')) " +
+           "OR (:villageName IS NULL AND :cellName IS NULL AND :sectorName IS NULL AND :districtName IS NOT NULL AND " +
+           "    (l.name = :districtName AND l.type = 'DISTRICT' OR l.parentLocation.name = :districtName AND l.parentLocation.type = 'DISTRICT' OR l.parentLocation.parentLocation.name = :districtName AND l.parentLocation.parentLocation.type = 'DISTRICT' OR l.parentLocation.parentLocation.parentLocation.name = :districtName AND l.parentLocation.parentLocation.parentLocation.type = 'DISTRICT')) " +
+           "OR (:villageName IS NULL AND :cellName IS NULL AND :sectorName IS NULL AND :districtName IS NULL AND :provinceName IS NOT NULL AND " +
+           "    (l.name = :provinceName AND l.type = 'PROVINCE' OR l.parentLocation.name = :provinceName AND l.parentLocation.type = 'PROVINCE' OR l.parentLocation.parentLocation.name = :provinceName AND l.parentLocation.parentLocation.type = 'PROVINCE' OR l.parentLocation.parentLocation.parentLocation.name = :provinceName AND l.parentLocation.parentLocation.parentLocation.type = 'PROVINCE' OR l.parentLocation.parentLocation.parentLocation.parentLocation.name = :provinceName AND l.parentLocation.parentLocation.parentLocation.parentLocation.type = 'PROVINCE'))")
     List<User> findUsersByLocationHierarchy(
-        @Param("provinceCode") String provinceCode,
+        @Param("provinceName") String provinceName,
         @Param("districtName") String districtName,
         @Param("sectorName") String sectorName,
         @Param("cellName") String cellName,

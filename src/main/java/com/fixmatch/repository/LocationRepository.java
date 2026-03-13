@@ -1,8 +1,7 @@
 package com.fixmatch.repository;
 
 import com.fixmatch.entity.Location;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import com.fixmatch.entity.LocationType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,120 +10,125 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * LocationRepository - Repository for Location entity
+ * LocationRepository - Repository for hierarchical location operations
  * 
  * Demonstrates:
- * 1. existsBy() methods (Assessment Requirement #7)
- * 2. Custom queries for hierarchical data
- * 3. Pagination and Sorting (Assessment Requirement #3)
+ * 1. Tree traversal queries
+ * 2. Hierarchical data retrieval
+ * 3. Adjacency List Model operations
  */
 @Repository
 public interface LocationRepository extends JpaRepository<Location, Long> {
 
     /**
-     * REQUIREMENT #7: existsBy() methods
+     * Find all root locations (provinces)
      */
-    boolean existsByProvinceCode(String provinceCode);
-    
-    boolean existsByProvinceCodeAndDistrictName(String provinceCode, String districtName);
+    List<Location> findByParentLocationIsNull();
 
     /**
-     * Find locations by province code
+     * Find all locations of a specific type
      */
-    List<Location> findByProvinceCode(String provinceCode);
+    List<Location> findByType(LocationType type);
 
     /**
-     * Find locations by province code with pagination
+     * Find location by name and type
      */
-    Page<Location> findByProvinceCode(String provinceCode, Pageable pageable);
+    Optional<Location> findByNameAndType(String name, LocationType type);
 
     /**
-     * Find locations by province name
+     * Find location by code
      */
-    List<Location> findByProvinceName(String provinceName);
+    Optional<Location> findByCode(String code);
 
     /**
-     * Find locations by district name
+     * Find all children of a specific location
      */
-    List<Location> findByDistrictName(String districtName);
+    List<Location> findByParentLocation(Location parent);
 
     /**
-     * Find locations by province and district
+     * Find all children of a specific location by parent ID
      */
-    List<Location> findByProvinceCodeAndDistrictName(String provinceCode, String districtName);
+    List<Location> findByParentLocationLocationId(Long parentId);
 
     /**
-     * Get all unique provinces
+     * Find all locations under a specific parent (recursive)
+     * This uses a recursive CTE (Common Table Expression) to get all descendants
      */
-    @Query("SELECT DISTINCT l.provinceCode, l.provinceName FROM Location l ORDER BY l.provinceName")
-    List<Object[]> findAllProvinces();
+    @Query(value = """
+        WITH RECURSIVE location_tree AS (
+            -- Base case: start with the specified parent
+            SELECT location_id, name, code, type, parent_location_id, 0 as level
+            FROM locations 
+            WHERE location_id = :parentId
+            
+            UNION ALL
+            
+            -- Recursive case: find all children
+            SELECT h.location_id, h.name, h.code, h.type, h.parent_location_id, lt.level + 1
+            FROM locations h
+            INNER JOIN location_tree lt ON h.parent_location_id = lt.location_id
+        )
+        SELECT * FROM location_tree WHERE level > 0 ORDER BY level, name
+        """, nativeQuery = true)
+    List<Object[]> findAllDescendants(@Param("parentId") Long parentId);
 
     /**
-     * Get all districts in a province
+     * Find all ancestors of a specific location (path to root)
      */
-    @Query("SELECT DISTINCT l.districtName FROM Location l WHERE l.provinceCode = :provinceCode ORDER BY l.districtName")
-    List<String> findDistrictsByProvinceCode(@Param("provinceCode") String provinceCode);
+    @Query(value = """
+        WITH RECURSIVE location_path AS (
+            -- Base case: start with the specified location
+            SELECT location_id, name, code, type, parent_location_id, 0 as level
+            FROM locations 
+            WHERE location_id = :locationId
+            
+            UNION ALL
+            
+            -- Recursive case: find parent
+            SELECT h.location_id, h.name, h.code, h.type, h.parent_location_id, lp.level + 1
+            FROM locations h
+            INNER JOIN location_path lp ON h.location_id = lp.parent_location_id
+        )
+        SELECT * FROM location_path WHERE level > 0 ORDER BY level DESC
+        """, nativeQuery = true)
+    List<Object[]> findAllAncestors(@Param("locationId") Long locationId);
 
     /**
-     * Get all sectors in a district
+     * Find locations by name (case-insensitive search)
      */
-    @Query("SELECT DISTINCT l.sectorName FROM Location l WHERE l.provinceCode = :provinceCode AND l.districtName = :districtName AND l.sectorName IS NOT NULL ORDER BY l.sectorName")
-    List<String> findSectorsByProvinceAndDistrict(@Param("provinceCode") String provinceCode, @Param("districtName") String districtName);
+    List<Location> findByNameContainingIgnoreCase(String name);
 
     /**
-     * Find locations with complete hierarchy (all levels filled)
+     * Find all villages (leaf nodes)
      */
-    @Query("SELECT l FROM Location l WHERE l.villageName IS NOT NULL")
-    List<Location> findCompleteHierarchyLocations();
+    @Query("SELECT h FROM Location h WHERE h.type = :villageType")
+    List<Location> findAllVillages(@Param("villageType") LocationType villageType);
 
     /**
-     * Find locations by level (District, Sector, Cell, Village)
+     * Find all provinces (root nodes)
      */
-    @Query("SELECT l FROM Location l WHERE " +
-           "CASE " +
-           "  WHEN l.villageName IS NOT NULL THEN 'Village' " +
-           "  WHEN l.cellName IS NOT NULL THEN 'Cell' " +
-           "  WHEN l.sectorName IS NOT NULL THEN 'Sector' " +
-           "  ELSE 'District' " +
-           "END = :level")
-    List<Location> findByLocationLevel(@Param("level") String level);
+    @Query("SELECT h FROM Location h WHERE h.type = :provinceType")
+    List<Location> findAllProvinces(@Param("provinceType") LocationType provinceType);
 
     /**
-     * Search locations by any field containing keyword
+     * Check if location exists by name and type
      */
-    @Query("SELECT l FROM Location l WHERE " +
-           "LOWER(l.provinceName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-           "LOWER(l.districtName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-           "LOWER(l.sectorName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-           "LOWER(l.cellName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-           "LOWER(l.villageName) LIKE LOWER(CONCAT('%', :keyword, '%'))")
-    List<Location> searchByKeyword(@Param("keyword") String keyword);
+    boolean existsByNameAndType(String name, LocationType type);
 
     /**
-     * Count locations by province
+     * Count children of a specific location
      */
-    long countByProvinceCode(String provinceCode);
+    long countByParentLocation(Location parent);
 
     /**
-     * Find location by complete address
+     * Find locations by type under a specific parent
      */
-    Optional<Location> findByProvinceCodeAndDistrictNameAndSectorNameAndCellNameAndVillageName(
-        String provinceCode, String districtName, String sectorName, String cellName, String villageName);
+    @Query("SELECT h FROM Location h WHERE h.parentLocation.locationId = :parentId AND h.type = :type")
+    List<Location> findByParentIdAndType(@Param("parentId") Long parentId, @Param("type") LocationType type);
 
     /**
-     * Find location by village name
+     * Get full hierarchy tree starting from a specific location
      */
-    Optional<Location> findByVillageName(String villageName);
-
-    /**
-     * Get all villages (distinct village names)
-     */
-    @Query("SELECT DISTINCT l.villageName FROM Location l WHERE l.villageName IS NOT NULL ORDER BY l.villageName")
-    List<String> findAllVillageNames();
-
-    /**
-     * Find all locations with villages (for user registration dropdown)
-     */
-    @Query("SELECT l FROM Location l WHERE l.villageName IS NOT NULL ORDER BY l.provinceName, l.districtName, l.villageName")
-    List<Location> findAllVillageLocations();
+    @Query("SELECT h FROM Location h LEFT JOIN FETCH h.childLocations WHERE h.locationId = :locationId")
+    Optional<Location> findWithChildren(@Param("locationId") Long locationId);
 }

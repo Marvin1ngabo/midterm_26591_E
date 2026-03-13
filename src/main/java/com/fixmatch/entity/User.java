@@ -8,7 +8,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fixmatch.entity.HierarchicalLocation;
 import com.fixmatch.entity.Location;
 import java.time.LocalDateTime;
 
@@ -67,19 +66,12 @@ public class User {
     private String villageName;
 
     /**
-     * Many-to-One Relationship with HierarchicalLocation (NEW SYSTEM)
-     * - Many users can belong to one hierarchical location
-     */
-    @ManyToOne
-    @JoinColumn(name = "hierarchical_location_id")
-    private HierarchicalLocation hierarchicalLocation;
-
-    /**
-     * Many-to-One Relationship with Location (LEGACY SYSTEM - Backward Compatibility)
-     * - Many users can belong to one location
+     * Many-to-One Relationship with Location (Hierarchical System)
+     * - Many users can belong to one location (typically village level)
      */
     @ManyToOne
     @JoinColumn(name = "location_id")
+    @JsonIgnore
     private Location location;
 
     /**
@@ -89,6 +81,7 @@ public class User {
      * - cascade: Operations on User cascade to ProviderProfile
      */
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private ProviderProfile providerProfile;
 
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -129,13 +122,11 @@ public class User {
     }
 
     /**
-     * Get full location string using hierarchical location (preferred) or legacy location
+     * Get full location string using hierarchical location
      */
     public String getFullLocation() {
-        if (hierarchicalLocation != null) {
-            return hierarchicalLocation.getFormattedAddress();
-        } else if (location != null) {
-            return location.getFullAddress();
+        if (location != null) {
+            return location.getFormattedAddress();
         }
         return "Location not set";
     }
@@ -147,6 +138,6 @@ public class User {
         return name != null && !name.trim().isEmpty() &&
                email != null && !email.trim().isEmpty() &&
                phone != null && !phone.trim().isEmpty() &&
-               (hierarchicalLocation != null || location != null);
+               location != null;
     }
 }

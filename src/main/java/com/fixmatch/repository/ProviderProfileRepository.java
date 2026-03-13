@@ -69,7 +69,7 @@ public interface ProviderProfileRepository extends JpaRepository<ProviderProfile
            "JOIN pp.user u " +
            "JOIN u.location l " +
            "WHERE s.name = :skillName " +
-           "AND l.provinceCode = :provinceCode " +
+           "AND l.code = :provinceCode " +
            "AND pp.rating >= :minRating " +
            "AND pp.verificationStatus = true")
     Page<ProviderProfile> findProvidersBySkillAndProvinceAndRating(

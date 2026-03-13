@@ -1,21 +1,21 @@
 package com.fixmatch.service;
 
 import com.fixmatch.entity.Location;
+import com.fixmatch.entity.LocationType;
 import com.fixmatch.repository.LocationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
+import java.util.Optional;
 
 /**
- * LocationService - Business logic for Location entity
+ * LocationService - Business logic for hierarchical location operations
  * 
  * Demonstrates:
- * 1. existsBy() methods (Requirement #7)
- * 2. Hierarchical location management
- * 3. Pagination and Sorting (Requirement #3)
+ * 1. Tree data structure operations
+ * 2. Hierarchical data management
+ * 3. Location path building and navigation
  */
 @Service
 @Transactional
@@ -25,16 +25,32 @@ public class LocationService {
     private LocationRepository locationRepository;
 
     /**
-     * Save location
+     * Create a new location
      */
-    public Location saveLocation(Location location) {
-        // Validate required fields
-        if (location.getProvinceCode() == null || location.getProvinceName() == null || 
-            location.getDistrictName() == null) {
-            throw new IllegalArgumentException("Province code, province name, and district name are required");
+    public Location createLocation(String name, String code, LocationType type, Long parentId) {
+        Location location = new Location(name, code, type);
+        
+        if (parentId != null) {
+            Location parent = locationRepository.findById(parentId)
+                .orElseThrow(() -> new RuntimeException("Parent location not found with id: " + parentId));
+            location.setParentLocation(parent);
         }
         
         return locationRepository.save(location);
+    }
+
+    /**
+     * Get all root locations (provinces)
+     */
+    public List<Location> getAllProvinces() {
+        return locationRepository.findAllProvinces(LocationType.PROVINCE);
+    }
+
+    /**
+     * Get all villages
+     */
+    public List<Location> getAllVillages() {
+        return locationRepository.findAllVillages(LocationType.VILLAGE);
     }
 
     /**
@@ -46,101 +62,76 @@ public class LocationService {
     }
 
     /**
-     * Get all locations
+     * Get location by name and type
      */
-    public List<Location> getAllLocations() {
-        return locationRepository.findAll();
+    public Optional<Location> getLocationByNameAndType(String name, LocationType type) {
+        return locationRepository.findByNameAndType(name, type);
     }
 
     /**
-     * REQUIREMENT #7: Check if province exists
+     * Get all children of a location
      */
-    public boolean provinceExists(String provinceCode) {
-        return locationRepository.existsByProvinceCode(provinceCode);
+    public List<Location> getChildren(Long parentId) {
+        return locationRepository.findByParentLocationLocationId(parentId);
     }
 
     /**
-     * REQUIREMENT #7: Check if district exists in province
+     * Get all locations of a specific type
      */
-    public boolean districtExistsInProvince(String provinceCode, String districtName) {
-        return locationRepository.existsByProvinceCodeAndDistrictName(provinceCode, districtName);
+    public List<Location> getLocationsByType(LocationType type) {
+        return locationRepository.findByType(type);
     }
 
     /**
-     * Get locations by province code
+     * Search locations by name
      */
-    public List<Location> getLocationsByProvinceCode(String provinceCode) {
-        return locationRepository.findByProvinceCode(provinceCode);
+    public List<Location> searchLocationsByName(String name) {
+        return locationRepository.findByNameContainingIgnoreCase(name);
     }
 
     /**
-     * REQUIREMENT #3: Get locations by province with Pagination
+     * Build complete Rwanda location hierarchy
      */
-    public Page<Location> getLocationsByProvinceCode(String provinceCode, Pageable pageable) {
-        return locationRepository.findByProvinceCode(provinceCode, pageable);
+    public void buildRwandaHierarchy() {
+        // Create Kigali Province
+        Location kigali = createLocation("Kigali City", "KGL", LocationType.PROVINCE, null);
+        
+        // Create Districts under Kigali
+        Location gasabo = createLocation("Gasabo", "GAS", LocationType.DISTRICT, kigali.getLocationId());
+        Location kicukiro = createLocation("Kicukiro", "KIC", LocationType.DISTRICT, kigali.getLocationId());
+        Location nyarugenge = createLocation("Nyarugenge", "NYA", LocationType.DISTRICT, kigali.getLocationId());
+        
+        // Create Sectors under Gasabo
+        Location kimironko = createLocation("Kimironko", "KIM", LocationType.SECTOR, gasabo.getLocationId());
+        Location remera = createLocation("Remera", "REM", LocationType.SECTOR, gasabo.getLocationId());
+        
+        // Create Cells under Kimironko
+        Location bibare = createLocation("Bibare", "BIB", LocationType.CELL, kimironko.getLocationId());
+        Location kibagabaga = createLocation("Kibagabaga", "KBG", LocationType.CELL, kimironko.getLocationId());
+        
+        // Create Villages under Bibare
+        createLocation("Nyagatovu", "NYG", LocationType.VILLAGE, bibare.getLocationId());
+        createLocation("Kiyovu", "KIY", LocationType.VILLAGE, bibare.getLocationId());
+        
+        // Create more provinces
+        Location eastern = createLocation("Eastern Province", "EST", LocationType.PROVINCE, null);
+        Location western = createLocation("Western Province", "WST", LocationType.PROVINCE, null);
+        Location northern = createLocation("Northern Province", "NTH", LocationType.PROVINCE, null);
+        Location southern = createLocation("Southern Province", "STH", LocationType.PROVINCE, null);
+        
+        // Add some districts to other provinces
+        createLocation("Rwamagana", "RWA", LocationType.DISTRICT, eastern.getLocationId());
+        createLocation("Karongi", "KAR", LocationType.DISTRICT, western.getLocationId());
+        createLocation("Musanze", "MUS", LocationType.DISTRICT, northern.getLocationId());
+        createLocation("Huye", "HUY", LocationType.DISTRICT, southern.getLocationId());
     }
 
     /**
-     * Get locations by province name
+     * Get full path for a location
      */
-    public List<Location> getLocationsByProvinceName(String provinceName) {
-        return locationRepository.findByProvinceName(provinceName);
-    }
-
-    /**
-     * Get locations by district name
-     */
-    public List<Location> getLocationsByDistrictName(String districtName) {
-        return locationRepository.findByDistrictName(districtName);
-    }
-
-    /**
-     * Get all unique provinces
-     */
-    public List<Object[]> getAllProvinces() {
-        return locationRepository.findAllProvinces();
-    }
-
-    /**
-     * Get all districts in a province
-     */
-    public List<String> getDistrictsByProvinceCode(String provinceCode) {
-        return locationRepository.findDistrictsByProvinceCode(provinceCode);
-    }
-
-    /**
-     * Get all sectors in a district
-     */
-    public List<String> getSectorsByProvinceAndDistrict(String provinceCode, String districtName) {
-        return locationRepository.findSectorsByProvinceAndDistrict(provinceCode, districtName);
-    }
-
-    /**
-     * Get locations with complete hierarchy
-     */
-    public List<Location> getCompleteHierarchyLocations() {
-        return locationRepository.findCompleteHierarchyLocations();
-    }
-
-    /**
-     * Get locations by level (District, Sector, Cell, Village)
-     */
-    public List<Location> getLocationsByLevel(String level) {
-        return locationRepository.findByLocationLevel(level);
-    }
-
-    /**
-     * Search locations by keyword
-     */
-    public List<Location> searchLocations(String keyword) {
-        return locationRepository.searchByKeyword(keyword);
-    }
-
-    /**
-     * Count locations by province
-     */
-    public long countLocationsByProvince(String provinceCode) {
-        return locationRepository.countByProvinceCode(provinceCode);
+    public String getFullPath(Long locationId) {
+        Location location = getLocationById(locationId);
+        return location.getFullPath();
     }
 
     /**
@@ -148,45 +139,80 @@ public class LocationService {
      */
     public LocationStatistics getLocationStatistics() {
         long totalLocations = locationRepository.count();
-        List<Object[]> provinces = getAllProvinces();
-        long totalProvinces = provinces.size();
+        long provinces = locationRepository.findByType(LocationType.PROVINCE).size();
+        long districts = locationRepository.findByType(LocationType.DISTRICT).size();
+        long sectors = locationRepository.findByType(LocationType.SECTOR).size();
+        long cells = locationRepository.findByType(LocationType.CELL).size();
+        long villages = locationRepository.findByType(LocationType.VILLAGE).size();
         
-        // Count unique districts
-        long totalDistricts = locationRepository.findAll().stream()
-            .map(Location::getDistrictName)
-            .distinct()
-            .count();
-        
-        return new LocationStatistics(totalLocations, totalProvinces, totalDistricts);
+        return new LocationStatistics(totalLocations, provinces, districts, sectors, cells, villages);
     }
 
     /**
-     * Get all village locations for user registration
+     * Find village by name (for user registration)
      */
-    public List<Location> getAllVillageLocations() {
-        return locationRepository.findAllVillageLocations();
+    public Optional<Location> findVillageByName(String villageName) {
+        return locationRepository.findByNameAndType(villageName, LocationType.VILLAGE);
     }
 
     /**
-     * Get all village names
+     * Check if location exists
      */
-    public List<String> getAllVillageNames() {
-        return locationRepository.findAllVillageNames();
+    public boolean locationExists(String name, LocationType type) {
+        return locationRepository.existsByNameAndType(name, type);
     }
+
+    /**
+     * Delete location (only if it has no children)
+     */
+    public void deleteLocation(Long locationId) {
+        Location location = getLocationById(locationId);
+        
+        if (!location.getChildLocations().isEmpty()) {
+            throw new RuntimeException("Cannot delete location with children. Delete children first.");
+        }
+        
+        locationRepository.delete(location);
+    }
+
+    /**
+     * Move location to new parent
+     */
+    public Location moveLocation(Long locationId, Long newParentId) {
+        Location location = getLocationById(locationId);
+        Location newParent = getLocationById(newParentId);
+        
+        location.setParentLocation(newParent);
+        return locationRepository.save(location);
+    }
+
+    /**
+     * Inner class for location statistics
+     */
     public static class LocationStatistics {
         private final long totalLocations;
-        private final long totalProvinces;
-        private final long totalDistricts;
+        private final long provinces;
+        private final long districts;
+        private final long sectors;
+        private final long cells;
+        private final long villages;
 
-        public LocationStatistics(long totalLocations, long totalProvinces, long totalDistricts) {
+        public LocationStatistics(long totalLocations, long provinces, long districts, 
+                                long sectors, long cells, long villages) {
             this.totalLocations = totalLocations;
-            this.totalProvinces = totalProvinces;
-            this.totalDistricts = totalDistricts;
+            this.provinces = provinces;
+            this.districts = districts;
+            this.sectors = sectors;
+            this.cells = cells;
+            this.villages = villages;
         }
 
         // Getters
         public long getTotalLocations() { return totalLocations; }
-        public long getTotalProvinces() { return totalProvinces; }
-        public long getTotalDistricts() { return totalDistricts; }
+        public long getProvinces() { return provinces; }
+        public long getDistricts() { return districts; }
+        public long getSectors() { return sectors; }
+        public long getCells() { return cells; }
+        public long getVillages() { return villages; }
     }
 }

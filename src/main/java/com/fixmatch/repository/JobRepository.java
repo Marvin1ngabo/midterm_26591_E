@@ -41,13 +41,13 @@ public interface JobRepository extends JpaRepository<Job, Long> {
     /**
      * Find jobs by province code
      */
-    @Query("SELECT j FROM Job j JOIN j.location l WHERE l.provinceCode = :provinceCode")
+    @Query("SELECT j FROM Job j JOIN j.location l WHERE l.code = :provinceCode")
     List<Job> findJobsByProvinceCode(@Param("provinceCode") String provinceCode);
 
     /**
      * Find jobs by province code with Pagination
      */
-    @Query("SELECT j FROM Job j JOIN j.location l WHERE l.provinceCode = :provinceCode")
+    @Query("SELECT j FROM Job j JOIN j.location l WHERE l.code = :provinceCode")
     Page<Job> findJobsByProvinceCode(@Param("provinceCode") String provinceCode, Pageable pageable);
 
     /**
@@ -55,7 +55,7 @@ public interface JobRepository extends JpaRepository<Job, Long> {
      */
     @Query("SELECT j FROM Job j JOIN j.location l " +
            "WHERE j.category.id = :categoryId " +
-           "AND l.provinceCode = :provinceCode " +
+           "AND l.code = :provinceCode " +
            "AND j.status = 'OPEN'")
     Page<Job> findOpenJobsByCategoryAndProvince(
         @Param("categoryId") Long categoryId,
@@ -109,7 +109,7 @@ public interface JobRepository extends JpaRepository<Job, Long> {
     /**
      * Find jobs by location
      */
-    Page<Job> findByLocationId(Long locationId, Pageable pageable);
+    Page<Job> findByLocationLocationId(Long locationId, Pageable pageable);
 
     /**
      * Find high-budget jobs (above specified amount)
@@ -126,6 +126,6 @@ public interface JobRepository extends JpaRepository<Job, Long> {
     /**
      * Get job statistics by province
      */
-    @Query("SELECT l.provinceName, COUNT(j) FROM Job j JOIN j.location l GROUP BY l.provinceName")
+    @Query("SELECT p.name, COUNT(j) FROM Job j JOIN j.location l JOIN l.parentLocation c JOIN c.parentLocation s JOIN s.parentLocation d JOIN d.parentLocation p WHERE p.type = 'PROVINCE' GROUP BY p.name")
     List<Object[]> getJobStatsByProvince();
 }

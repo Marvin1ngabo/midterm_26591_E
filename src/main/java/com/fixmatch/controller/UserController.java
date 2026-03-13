@@ -3,6 +3,8 @@ package com.fixmatch.controller;
 import com.fixmatch.entity.User;
 import com.fixmatch.entity.UserType;
 import com.fixmatch.dto.UserRegistrationRequest;
+import com.fixmatch.dto.UserResponseDTO;
+import com.fixmatch.util.UserMapper;
 import com.fixmatch.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -43,7 +45,7 @@ public class UserController {
      * POST /api/users/register?locationId=1
      */
     @PostMapping("/register")
-    public ResponseEntity<User> registerUser(
+    public ResponseEntity<UserResponseDTO> registerUser(
             @RequestBody User user,
             @RequestParam(required = false) Long locationId) {
         try {
@@ -55,7 +57,8 @@ public class UserController {
                 // New: use villageName in request body or regular registration
                 registered = userService.registerUser(user);
             }
-            return new ResponseEntity<>(registered, HttpStatus.CREATED);
+            UserResponseDTO responseDTO = UserMapper.toResponseDTO(registered);
+            return new ResponseEntity<>(responseDTO, HttpStatus.CREATED);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
         }
@@ -68,22 +71,34 @@ public class UserController {
      * Body: { "name": "John", "email": "john@example.com", "password": "pass", "userType": "CLIENT" }
      */
     @PostMapping("/register/village")
-    public ResponseEntity<User> registerUserByVillage(
+    public ResponseEntity<UserResponseDTO> registerUserByVillage(
             @RequestBody User user,
             @RequestParam String villageName) {
         try {
             User registered = userService.registerUserByVillage(user, villageName);
-            return new ResponseEntity<>(registered, HttpStatus.CREATED);
+            UserResponseDTO responseDTO = UserMapper.toResponseDTO(registered);
+            return new ResponseEntity<>(responseDTO, HttpStatus.CREATED);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
         }
     }
 
     /**
-     * Get user by ID
+     * Register new user with UserRegistrationRequest DTO (recommended)
      * 
-     * GET /api/users/{id}
+     * POST /api/users/register/dto
+     * Body: { "name": "John", "email": "john@example.com", "password": "pass", "userType": "CLIENT", "villageName": "Nyagatovu" }
      */
+    @PostMapping("/register/dto")
+    public ResponseEntity<UserResponseDTO> registerUserFromDTO(@RequestBody UserRegistrationRequest request) {
+        try {
+            User registered = userService.registerUserFromRequest(request);
+            UserResponseDTO responseDTO = UserMapper.toResponseDTO(registered);
+            return new ResponseEntity<>(responseDTO, HttpStatus.CREATED);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
     @GetMapping("/{id}")
     public ResponseEntity<User> getUserById(@PathVariable Long id) {
         try {
@@ -207,14 +222,14 @@ public class UserController {
      */
     @GetMapping("/location")
     public ResponseEntity<List<User>> getUsersByLocationHierarchy(
-            @RequestParam String provinceCode,
+            @RequestParam String provinceName,
             @RequestParam String districtName,
             @RequestParam(required = false) String sectorName,
             @RequestParam(required = false) String cellName,
             @RequestParam(required = false) String villageName) {
         
         List<User> users = userService.getUsersByLocationHierarchy(
-            provinceCode, districtName, sectorName, cellName, villageName
+            provinceName, districtName, sectorName, cellName, villageName
         );
         return ResponseEntity.ok(users);
     }
