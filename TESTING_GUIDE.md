@@ -1,4 +1,4 @@
-# 🧪 FixMatch Testing Guide
+# 🧪 FixMatch Testing Guide - Unified Hierarchical Location System
 
 ## 🚀 Quick Start Testing
 
@@ -26,6 +26,9 @@ mvn spring-boot:run
 ✅ FixMatch Backend Started Successfully!
 🚀 Server running on: http://localhost:8080
 📚 API Documentation: http://localhost:8080/api
+🌳 Hierarchical locations seeded: 13
+👥 Sample users seeded: 3
+📊 Database seeding completed successfully!
 ```
 
 ## 🔧 Testing Methods
@@ -36,19 +39,29 @@ mvn spring-boot:run
 3. Test each section systematically
 
 ### Method 2: Postman Collection
-1. Import `FixMatch_Postman_Collection.json` into Postman
-2. Run the collection to test all endpoints
+1. Import `FixMatch_Postman_Collection_Updated.json` into Postman
+2. Follow the testing sequence in `POSTMAN_TESTING_GUIDE.md`
 
 ### Method 3: Command Line (curl)
 ```bash
 # Health check
-curl http://localhost:8080/api/health
-
-# Get API documentation
 curl http://localhost:8080/api
 
-# Test user endpoints
-curl http://localhost:8080/api/users
+# Test hierarchical locations
+curl http://localhost:8080/api/locations/provinces
+curl http://localhost:8080/api/locations/villages
+
+# Test village-based user registration
+curl -X POST http://localhost:8080/api/users/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Test User",
+    "email": "test@example.com",
+    "password": "password123",
+    "phone": "0786789012",
+    "userType": "CLIENT",
+    "villageName": "Kiyovu"
+  }'
 ```
 
 ## 📋 Assessment Requirements Testing Checklist
@@ -60,31 +73,32 @@ curl http://localhost:8080/api
 ```
 **Verify:** Response shows 7 tables with relationships
 
-### ✅ Requirement #2: Location Saving (2 Marks)
-**Test:** Create Location with complete hierarchy
+### ✅ Requirement #2: Hierarchical Location System (2 Marks)
+**Test:** Create locations with parent-child relationships
 ```bash
-# Create Location with complete hierarchy
-curl -X POST http://localhost:8080/api/locations \
-  -H "Content-Type: application/json" \
-  -d '{
-    "provinceCode":"TST",
-    "provinceName":"Test Province",
-    "districtName":"Test District",
-    "sectorName":"Test Sector",
-    "cellName":"Test Cell",
-    "villageName":"Test Village"
-  }'
+# Get all provinces (root nodes)
+curl http://localhost:8080/api/locations/provinces
 
-# Create Location with partial hierarchy (District level only)
+# Get all villages (leaf nodes)  
+curl http://localhost:8080/api/locations/villages
+
+# Get location with full hierarchy path
+curl http://localhost:8080/api/locations/12
+
+# Get children of a location
+curl http://localhost:8080/api/locations/1/children
+
+# Create new location with parent
 curl -X POST http://localhost:8080/api/locations \
   -H "Content-Type: application/json" \
   -d '{
-    "provinceCode":"TST2",
-    "provinceName":"Test Province 2",
-    "districtName":"Test District 2"
+    "name": "New Village",
+    "code": "NV",
+    "type": "VILLAGE",
+    "parentId": 10
   }'
 ```
-**Verify:** Single location table stores complete hierarchy, Users/Jobs reference via `location_id`
+**Verify:** Single locations table with self-referencing parent_location_id, complete hierarchy paths
 
 ### ✅ Requirement #3: Sorting & Pagination (5 Marks)
 **Test Sorting:**
@@ -152,29 +166,31 @@ curl "http://localhost:8080/api/users/exists/email?email=test@example.com"
 curl "http://localhost:8080/api/users/exists/phone?phone=0781234567"
 ```
 
-### Test Requirement #8: Users by Province and Location Hierarchy
+### ✅ Requirement #8: Users by Province and Complete Location Hierarchy (4 Marks)
+**Test:** Hierarchical location queries with automatic traversal
 ```bash
 # By province code
 curl http://localhost:8080/api/users/province/code/KGL
 
-# By province name
-curl http://localhost:8080/api/users/province/name/Kigali
+# By province name (hierarchical traversal)
+curl "http://localhost:8080/api/users/province/name/Kigali%20City"
 
-# By district name (NEW)
-curl http://localhost:8080/api/users/district/name/Gasabo
+# By district name (includes all child locations)
+curl "http://localhost:8080/api/users/district/name/Gasabo"
 
-# By sector name (NEW)
-curl http://localhost:8080/api/users/sector/name/Kimisagara
+# By sector name (hierarchical traversal)
+curl "http://localhost:8080/api/users/sector/name/Kimironko"
 
-# By cell name (NEW)
-curl http://localhost:8080/api/users/cell/name/Rugenge
+# By cell name (hierarchical traversal)
+curl "http://localhost:8080/api/users/cell/name/Bibare"
 
-# By village name (NEW)
-curl http://localhost:8080/api/users/village/name/Kiyovu
+# By village name (direct match)
+curl "http://localhost:8080/api/users/village/name/Kiyovu"
 
-# By complete location hierarchy (NEW)
-curl "http://localhost:8080/api/users/location?provinceCode=KGL&districtName=Gasabo&sectorName=Kimisagara&cellName=Rugenge&villageName=Kiyovu"
+# By flexible location hierarchy
+curl "http://localhost:8080/api/users/location?provinceName=Kigali%20City&districtName=Gasabo&villageName=Kiyovu"
 ```
+**Verify:** Queries use hierarchical traversal to find users at any level of the location tree
 
 ## 🗄️ Database Verification
 
@@ -257,28 +273,46 @@ time curl "http://localhost:8080/api/users?sortBy=name&direction=asc"
 - **Foreign Keys:** Related data properly linked
 
 ### Database Tables Created
-- `locations` (id, province_code, province_name, district_name, sector_name, cell_name, village_name)
-- `users` (id, name, email, location_id)
+- `locations` (location_id, name, code, type, parent_location_id) - **Hierarchical structure**
+- `users` (id, name, email, location_id) - **Links to village-level location**
 - `provider_profiles` (id, user_id, bio, rating)
-- `provider_skills` (provider_id, skill_id)
+- `provider_skills` (provider_id, skill_id) - **Many-to-Many junction table**
 - `jobs` (id, title, client_id, provider_id, category_id, location_id)
 - `service_categories` (id, name, description)
 - `skills` (id, name, description)
 
+### Hierarchical Location Data
+- **13 Locations** total in tree structure
+- **3 Provinces** (Kigali City, Eastern Province, Western Province)
+- **2 Districts** (Gasabo, Rwamagana)
+- **2 Sectors** (Kimironko, Kimisagara)
+- **2 Cells** (Bibare, Rugenge)
+- **2 Villages** (Nyagatovu, Kiyovu)
+
+### Village-Based User Registration
+- Users register by selecting village name
+- Automatically linked to complete location hierarchy
+- `fullLocation` field shows: "Kigali City, Gasabo, Kimironko, Bibare, Nyagatovu"
+
 ## 🎓 Viva-Voce Preparation
 
 ### Key Points to Explain
-1. **JPA Relationships:** How foreign keys are managed
-2. **Pagination Benefits:** Memory usage and performance
-3. **Sorting Implementation:** Using Sort and Pageable
-4. **existsBy() Logic:** Efficiency over findBy()
-5. **JPQL Queries:** Join syntax for province queries
-6. **Cascade Operations:** How related entities are saved
-7. **Transaction Management:** ACID properties
+1. **Hierarchical Location System:** Self-referencing relationships and tree data structure
+2. **Adjacency List Model:** Parent-child relationships in single table
+3. **Village-Based Registration:** Automatic hierarchy linking through village selection
+4. **Tree Traversal:** Recursive queries for hierarchical location searches
+5. **JPA Relationships:** How foreign keys are managed in hierarchical structure
+6. **Pagination Benefits:** Memory usage and performance optimization
+7. **existsBy() Logic:** Efficiency over findBy() methods
+8. **JPQL Queries:** Complex hierarchical join syntax
+9. **Cascade Operations:** How related entities are saved and updated
+10. **Transaction Management:** ACID properties in hierarchical operations
 
 ### Demo Flow for Assessment
-1. Start application and show startup logs
-2. Open browser tester and demonstrate each requirement
-3. Show database tables and foreign key constraints
-4. Explain code implementation for each requirement
-5. Answer theoretical questions about JPA concepts
+1. Start application and show hierarchical location seeding logs
+2. Demonstrate village-based user registration
+3. Show hierarchical location queries (province → district → village)
+4. Explain tree data structure and parent-child relationships
+5. Show database schema with self-referencing foreign key
+6. Demonstrate pagination and sorting on hierarchical data
+7. Answer theoretical questions about tree structures and JPA concepts
