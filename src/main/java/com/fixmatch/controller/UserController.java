@@ -38,7 +38,7 @@ public class UserController {
      *   "email": "john@example.com", 
      *   "password": "pass", 
      *   "userType": "CLIENT",
-     *   "villageName": "Kiyovu"  // Optional: village name in body
+     *   "villageId": 12  // Optional: village ID in body
      * }
      * 
      * OR with locationId parameter (legacy):
@@ -54,7 +54,7 @@ public class UserController {
                 // Legacy: use locationId parameter
                 registered = userService.registerUser(user, locationId);
             } else {
-                // New: use villageName in request body or regular registration
+                // New: use villageId in request body or regular registration
                 registered = userService.registerUser(user);
             }
             UserResponseDTO responseDTO = UserMapper.toResponseDTO(registered);
@@ -65,17 +65,17 @@ public class UserController {
     }
 
     /**
-     * Register new user by village name (easier for frontend)
+     * Register new user by village ID (easier for frontend)
      * 
-     * POST /api/users/register/village?villageName=Kiyovu
+     * POST /api/users/register/village?villageId=12
      * Body: { "name": "John", "email": "john@example.com", "password": "pass", "userType": "CLIENT" }
      */
     @PostMapping("/register/village")
     public ResponseEntity<UserResponseDTO> registerUserByVillage(
             @RequestBody User user,
-            @RequestParam String villageName) {
+            @RequestParam Long villageId) {
         try {
-            User registered = userService.registerUserByVillage(user, villageName);
+            User registered = userService.registerUserByVillage(user, villageId);
             UserResponseDTO responseDTO = UserMapper.toResponseDTO(registered);
             return new ResponseEntity<>(responseDTO, HttpStatus.CREATED);
         } catch (RuntimeException e) {
@@ -87,7 +87,7 @@ public class UserController {
      * Register new user with UserRegistrationRequest DTO (recommended)
      * 
      * POST /api/users/register/dto
-     * Body: { "name": "John", "email": "john@example.com", "password": "pass", "userType": "CLIENT", "villageName": "Nyagatovu" }
+     * Body: { "name": "John", "email": "john@example.com", "password": "pass", "userType": "CLIENT", "villageId": 12 }
      */
     @PostMapping("/register/dto")
     public ResponseEntity<UserResponseDTO> registerUserFromDTO(@RequestBody UserRegistrationRequest request) {

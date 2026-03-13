@@ -59,11 +59,11 @@ public class User {
     private UserType userType;
 
     /**
-     * Village name for registration (not persisted to database)
+     * Village ID for registration (not persisted to database)
      * This field is used during registration to find the location
      */
     @Transient
-    private String villageName;
+    private Long villageId;
 
     /**
      * Many-to-One Relationship with Location (Hierarchical System)

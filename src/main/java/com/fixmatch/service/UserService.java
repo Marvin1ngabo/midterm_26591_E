@@ -56,10 +56,15 @@ public class UserService {
         user.setUserType(request.getUserType());
         
         // Handle village-based hierarchical location mapping
-        if (request.getVillageName() != null && !request.getVillageName().trim().isEmpty()) {
-            Location location = locationRepository
-                .findByNameAndType(request.getVillageName(), LocationType.VILLAGE)
-                .orElseThrow(() -> new RuntimeException("Village not found: " + request.getVillageName()));
+        if (request.getVillageId() != null) {
+            Location location = locationRepository.findById(request.getVillageId())
+                .orElseThrow(() -> new RuntimeException("Village not found with ID: " + request.getVillageId()));
+            
+            // Validate that the location is actually a village
+            if (location.getType() != LocationType.VILLAGE) {
+                throw new RuntimeException("Location with ID " + request.getVillageId() + " is not a village. It's a " + location.getType());
+            }
+            
             user.setLocation(location);
         }
         
@@ -89,10 +94,15 @@ public class UserService {
         }
         
         // Handle village-based hierarchical location mapping
-        if (user.getVillageName() != null && !user.getVillageName().trim().isEmpty()) {
-            Location location = locationRepository
-                .findByNameAndType(user.getVillageName(), LocationType.VILLAGE)
-                .orElseThrow(() -> new RuntimeException("Village not found: " + user.getVillageName()));
+        if (user.getVillageId() != null) {
+            Location location = locationRepository.findById(user.getVillageId())
+                .orElseThrow(() -> new RuntimeException("Village not found with ID: " + user.getVillageId()));
+            
+            // Validate that the location is actually a village
+            if (location.getType() != LocationType.VILLAGE) {
+                throw new RuntimeException("Location with ID " + user.getVillageId() + " is not a village. It's a " + location.getType());
+            }
+            
             user.setLocation(location);
         }
         
@@ -102,20 +112,20 @@ public class UserService {
         User savedUser = userRepository.save(user);
         
         // Clear the transient field after saving
-        savedUser.setVillageName(null);
+        savedUser.setVillageId(null);
         
         return savedUser;
     }
 
     /**
-     * Register new user by village name (alternative endpoint)
+     * Register new user by village ID (alternative endpoint)
      * 
-     * This method finds the location by village name and automatically
+     * This method finds the location by village ID and automatically
      * links the user to the complete location hierarchy
      */
-    public User registerUserByVillage(User user, String villageName) {
-        // Set the village name in the user object and use main registration method
-        user.setVillageName(villageName);
+    public User registerUserByVillage(User user, Long villageId) {
+        // Set the village ID in the user object and use main registration method
+        user.setVillageId(villageId);
         return registerUser(user);
     }
 

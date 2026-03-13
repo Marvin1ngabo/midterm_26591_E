@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
 /**
- * DTO for user registration with village name
+ * DTO for user registration with village ID
  */
 @Data
 public class UserRegistrationRequest {
@@ -25,5 +25,5 @@ public class UserRegistrationRequest {
     
     private UserType userType;
     
-    private String villageName;
+    private Long villageId;
 }
