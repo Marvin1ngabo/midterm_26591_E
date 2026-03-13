@@ -172,7 +172,7 @@ public class ProviderProfile {
             BigDecimal totalRating = rating.multiply(BigDecimal.valueOf(totalJobsCompleted));
             totalRating = totalRating.add(newRating);
             totalJobsCompleted++;
-            rating = totalRating.divide(BigDecimal.valueOf(totalJobsCompleted), 2, BigDecimal.ROUND_HALF_UP);
+            rating = totalRating.divide(BigDecimal.valueOf(totalJobsCompleted), 2, java.math.RoundingMode.HALF_UP);
         }
     }
 }
