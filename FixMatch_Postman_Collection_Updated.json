@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "FixMatch API - Unified Hierarchical Location System",
-    "description": "Complete API collection for FixMatch with unified hierarchical location system using single Location table with parent-child relationships (Adjacency List Model). Supports Province → District → Sector → Cell → Village hierarchy with village-based user registration.",
+    "description": "Complete API collection for FixMatch with unified hierarchical location system using single Location table with parent-child relationships (Adjacency List Model). Supports Province → District → Sector → Cell → Village hierarchy with village ID-based user registration for better efficiency and accuracy.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -208,10 +208,10 @@
       ]
     },
     {
-      "name": "2. Users - Village-Based Registration",
+      "name": "2. Users - Village ID-Based Registration",
       "item": [
         {
-          "name": "Register User with Village Name (Recommended)",
+          "name": "Register User with Village ID (Recommended)",
           "request": {
             "method": "POST",
             "header": [
@@ -222,7 +222,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Village User Test\",\n  \"email\": \"village.user@example.com\",\n  \"password\": \"password123\",\n  \"phone\": \"0786789012\",\n  \"userType\": \"CLIENT\",\n  \"villageName\": \"Kiyovu\"\n}"
+              "raw": "{\n  \"name\": \"Village User Test\",\n  \"email\": \"village.user@example.com\",\n  \"password\": \"password123\",\n  \"phone\": \"0786789012\",\n  \"userType\": \"CLIENT\",\n  \"villageId\": 13\n}"
             },
             "url": {
               "raw": "http://localhost:8080/api/users/register",
@@ -234,7 +234,7 @@
           }
         },
         {
-          "name": "Register User with Village (Separate Endpoint)",
+          "name": "Register User with Village ID (Separate Endpoint)",
           "request": {
             "method": "POST",
             "header": [
@@ -248,15 +248,16 @@
               "raw": "{\n  \"name\": \"Village Param User\",\n  \"email\": \"village.param@example.com\",\n  \"password\": \"password123\",\n  \"phone\": \"0786789013\",\n  \"userType\": \"PROVIDER\"\n}"
             },
             "url": {
-              "raw": "http://localhost:8080/api/users/register/village?villageName=Nyagatovu",
+              "raw": "http://localhost:8080/api/users/register/village?villageId=12",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8080",
               "path": ["api", "users", "register", "village"],
               "query": [
                 {
-                  "key": "villageName",
-                  "value": "Nyagatovu"
+                  "key": "villageId",
+                  "value": "12",
+                  "description": "Nyagatovu Village ID"
                 }
               ]
             }
@@ -274,7 +275,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"DTO User Test\",\n  \"email\": \"dto.user@example.com\",\n  \"password\": \"password123\",\n  \"phone\": \"0786789014\",\n  \"userType\": \"BOTH\",\n  \"villageName\": \"Kiyovu\"\n}"
+              "raw": "{\n  \"name\": \"DTO User Test\",\n  \"email\": \"dto.user@example.com\",\n  \"password\": \"password123\",\n  \"phone\": \"0786789014\",\n  \"userType\": \"BOTH\",\n  \"villageId\": 13\n}"
             },
             "url": {
               "raw": "http://localhost:8080/api/users/register/dto",

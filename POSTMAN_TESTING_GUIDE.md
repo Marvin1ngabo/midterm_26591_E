@@ -171,10 +171,10 @@ You'll see a collection called **"FixMatch API - Unified Hierarchical Location S
 }
 ```
 
-### ✅ **Phase 2: Village-Based User Registration**
+### ✅ **Phase 2: Village ID-Based User Registration**
 
-#### Test 8: Register User with Village Name (RECOMMENDED)
-**Folder:** 2. Users - Village-Based Registration → Register User with Village Name (Recommended)  
+#### Test 8: Register User with Village ID (RECOMMENDED)
+**Folder:** 2. Users - Village ID-Based Registration → Register User with Village ID (Recommended)  
 **Method:** POST  
 **URL:** `http://localhost:8080/api/users/register`
 
@@ -186,7 +186,7 @@ You'll see a collection called **"FixMatch API - Unified Hierarchical Location S
   "password": "password123",
   "phone": "0786789012",
   "userType": "CLIENT",
-  "villageName": "Kiyovu"
+  "villageId": 13
 }
 ```
 
@@ -206,12 +206,12 @@ You'll see a collection called **"FixMatch API - Unified Hierarchical Location S
 }
 ```
 
-**Note:** The user is automatically linked to the complete location hierarchy through the village name!
+**Note:** The user is automatically linked to the complete location hierarchy through the village ID!
 
-#### Test 9: Register User with Village (Separate Endpoint)
-**Folder:** 2. Users - Village-Based Registration → Register User with Village (Separate Endpoint)  
+#### Test 9: Register User with Village ID (Separate Endpoint)
+**Folder:** 2. Users - Village ID-Based Registration → Register User with Village ID (Separate Endpoint)  
 **Method:** POST  
-**URL:** `http://localhost:8080/api/users/register/village?villageName=Nyagatovu`
+**URL:** `http://localhost:8080/api/users/register/village?villageId=12`
 
 **Request Body:**
 ```json
@@ -507,10 +507,11 @@ After successful application startup, you should have:
 - Self-referencing parent-child relationships
 - Efficient tree data structure operations
 
-### **Village-Based User Registration**
-- Users select village from dropdown
+### **Village ID-Based User Registration**
+- Users select village ID from dropdown (more efficient than names)
 - Automatic linking to complete location hierarchy
 - Full location context available for queries and display
+- Validation ensures the provided ID is actually a village
 
 ### **Hierarchical Location Queries**
 - Query users by any administrative level
@@ -926,11 +927,11 @@ All these are included in the collection!
 
 ---
 
-## 🏘️ Village-Based User Registration
+## 🏘️ Village ID-Based User Registration
 
-### Why Village-Based Registration?
-When users register by selecting their village, they automatically get linked to the complete location hierarchy:
-- **Province** (e.g., "Kigali")
+### Why Village ID-Based Registration?
+When users register by selecting their village ID, they automatically get linked to the complete location hierarchy:
+- **Province** (e.g., "Kigali City")
 - **District** (e.g., "Gasabo") 
 - **Sector** (e.g., "Kimisagara")
 - **Cell** (e.g., "Rugenge")
@@ -938,30 +939,34 @@ When users register by selecting their village, they automatically get linked to
 
 This means you can query users by any level of the hierarchy!
 
-### Testing Village Registration Flow
+### Available Villages for Registration
+- **Nyagatovu**: ID = 12 (Kigali City → Gasabo → Kimironko → Bibare → Nyagatovu)
+- **Kiyovu**: ID = 13 (Kigali City → Gasabo → Kimisagara → Rugenge → Kiyovu)
 
-1. **Get Available Villages** (Test 1 & 2)
-   - Use `/api/locations/villages` to show users available villages
-   - Use `/api/locations/villages/names` for a simple dropdown
+### Testing Village ID Registration Flow
 
-2. **Register User by Village** (Test 3)
-   - User selects "Kiyovu" from dropdown
+1. **Get Available Villages** (Test 3)
+   - Use `/api/locations/villages` to show users available villages with IDs
+   - Frontend can display village names but submit village IDs
+
+2. **Register User by Village ID** (Test 8)
+   - User selects "Kiyovu" from dropdown (ID = 13)
    - System automatically links to complete hierarchy
    - User can now be found by province, district, sector, cell, or village queries
 
-3. **Verify Location Linking** (Tests 7-9)
+3. **Verify Location Linking** (Tests 11-14)
    - Test that user appears in province queries
    - Test that user appears in village queries
    - Test hierarchical location queries
 
-### Sample Village Registration Test
+### Sample Village ID Registration Test
 
 ```bash
-# Step 1: Get available villages
-curl http://localhost:8080/api/locations/villages/names
+# Step 1: Get available villages with IDs
+curl http://localhost:8080/api/locations/villages
 
-# Step 2: Register user by village
-curl -X POST http://localhost:8080/api/users/register/village?villageName=Kiyovu \
+# Step 2: Register user by village ID
+curl -X POST http://localhost:8080/api/users/register/village?villageId=13 \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Village User",
@@ -971,10 +976,22 @@ curl -X POST http://localhost:8080/api/users/register/village?villageName=Kiyovu
     "userType": "CLIENT"
   }'
 
-# Step 3: Verify user appears in province query
+# Step 3: Register user with village ID in body
+curl -X POST http://localhost:8080/api/users/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Another User",
+    "email": "another@example.com",
+    "password": "password123",
+    "phone": "0783456790",
+    "userType": "PROVIDER",
+    "villageId": 12
+  }'
+
+# Step 4: Verify user appears in province query
 curl http://localhost:8080/api/users/province/code/KGL
 
-# Step 4: Verify user appears in village query
+# Step 5: Verify user appears in village query
 curl http://localhost:8080/api/users/village/name/Kiyovu
 ```
 

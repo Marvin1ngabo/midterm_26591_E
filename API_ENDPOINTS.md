@@ -94,6 +94,13 @@ GET /api/locations/village/{villageName}
 ```
 **Example**: `GET /api/locations/village/Nyagatovu`
 
+### **Available Villages for Registration**
+Current villages in the system:
+- **Nyagatovu**: ID = 12 (Kigali City → Gasabo → Kimironko → Bibare → Nyagatovu)
+- **Kiyovu**: ID = 13 (Kigali City → Gasabo → Kimisagara → Rugenge → Kiyovu)
+
+**Note**: Use these village IDs for user registration instead of village names for better efficiency and accuracy.
+
 ### **Create New Location**
 ```http
 POST /api/locations
@@ -130,9 +137,9 @@ GET /api/locations/statistics
 
 ---
 
-## 👤 User Endpoints - Village-Based Registration
+## 👤 User Endpoints - Village ID-Based Registration
 
-#### Register User with Village Name (RECOMMENDED)
+#### Register User with Village ID (RECOMMENDED)
 ```http
 POST /api/users/register
 Content-Type: application/json
@@ -143,14 +150,14 @@ Content-Type: application/json
   "password": "password123",
   "phone": "0781234567",
   "userType": "CLIENT",
-  "villageName": "Kiyovu"
+  "villageId": 13
 }
 ```
-**Note**: The villageName automatically links the user to the complete location hierarchy (Province → District → Sector → Cell → Village). The user's `fullLocation` will show: "Kigali City, Gasabo, Kimisagara, Rugenge, Kiyovu"
+**Note**: The villageId automatically links the user to the complete location hierarchy (Province → District → Sector → Cell → Village). The user's `fullLocation` will show: "Kigali City, Gasabo, Kimisagara, Rugenge, Kiyovu"
 
-#### Register User with Village (Separate Endpoint)
+#### Register User with Village ID (Separate Endpoint)
 ```http
-POST /api/users/register/village?villageName=Nyagatovu
+POST /api/users/register/village?villageId=12
 Content-Type: application/json
 
 {
@@ -173,7 +180,7 @@ Content-Type: application/json
   "password": "password123",
   "phone": "0786789014",
   "userType": "BOTH",
-  "villageName": "Kiyovu"
+  "villageId": 13
 }
 ```
 
@@ -471,9 +478,12 @@ curl http://localhost:8080/api/locations/village/Kiyovu
 curl http://localhost:8080/api/locations/12/path
 ```
 
-### Test Village-Based User Registration
+### Test Village ID-Based User Registration
 ```bash
-# 1. Register user with village name
+# 1. Get all villages to see available IDs
+curl http://localhost:8080/api/locations/villages
+
+# 2. Register user with village ID
 curl -X POST http://localhost:8080/api/users/register \
   -H "Content-Type: application/json" \
   -d '{
@@ -482,10 +492,21 @@ curl -X POST http://localhost:8080/api/users/register \
     "password": "password123",
     "phone": "0781234567",
     "userType": "CLIENT",
-    "villageName": "Kiyovu"
+    "villageId": 13
   }'
 
-# 2. Get all users (shows full location hierarchy)
+# 3. Register user with village ID parameter
+curl -X POST "http://localhost:8080/api/users/register/village?villageId=12" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Village User",
+    "email": "village@example.com",
+    "password": "password123",
+    "phone": "0781234568",
+    "userType": "PROVIDER"
+  }'
+
+# 4. Get all users (shows full location hierarchy)
 curl http://localhost:8080/api/users
 ```
 
@@ -601,10 +622,11 @@ curl -X POST "http://localhost:8080/api/jobs?clientId=1&categoryId=1&locationId=
 - Self-referencing parent-child relationships
 - Complete hierarchy: Province → District → Sector → Cell → Village
 
-### **Village-Based User Registration**
-- Users register by selecting village name
+### **Village ID-Based User Registration**
+- Users register by selecting village ID (more efficient than name)
 - Automatically linked to complete location hierarchy
 - Full location context available: "Kigali City, Gasabo, Kimironko, Bibare, Nyagatovu"
+- Validation ensures the provided ID is actually a village
 
 ### **Hierarchical Location Queries**
 - Query users by any administrative level
