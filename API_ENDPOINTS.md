@@ -1,94 +1,127 @@
-# FixMatch API Endpoints Documentation - Hierarchical Location System
+# FixMatch API Endpoints Documentation - Unified Hierarchical Location System
 
 Base URL: `http://localhost:8080`
 
-## 🌳 **Hierarchical Location Endpoints (NEW)**
+## 🌳 **Hierarchical Location Endpoints**
 
 ### **Initialize Rwanda Location Hierarchy**
 ```http
-POST /api/hierarchical-locations/initialize
+POST /api/locations/initialize
 ```
-**Description**: Creates the complete Rwanda administrative hierarchy using the Adjacency List Model.
+**Description**: Creates the complete Rwanda administrative hierarchy using the Adjacency List Model with single Location table.
 
 ### **Get All Provinces (Root Nodes)**
 ```http
-GET /api/hierarchical-locations/provinces
+GET /api/locations/provinces
+```
+**Response Example**:
+```json
+[
+  {
+    "locationId": 1,
+    "name": "Kigali City",
+    "code": "KGL",
+    "type": "PROVINCE",
+    "fullPath": "Kigali City",
+    "formattedAddress": "Kigali City",
+    "depthLevel": 0,
+    "root": true,
+    "leaf": false
+  }
+]
 ```
 
 ### **Get All Villages (Leaf Nodes)**
 ```http
-GET /api/hierarchical-locations/villages
-```
-
-### **Get Location with Full Path**
-```http
-GET /api/hierarchical-locations/1
+GET /api/locations/villages
 ```
 **Response Example**:
 ```json
-{
-  "locationId": 1,
-  "name": "Kigali City",
-  "code": "KGL",
-  "type": "PROVINCE",
-  "fullPath": "Kigali City",
-  "formattedAddress": "Kigali City",
-  "depthLevel": 0,
-  "isRoot": true,
-  "isLeaf": false
-}
+[
+  {
+    "locationId": 12,
+    "name": "Nyagatovu",
+    "code": "NYG",
+    "type": "VILLAGE",
+    "fullPath": "Kigali City → Gasabo → Kimironko → Bibare → Nyagatovu",
+    "formattedAddress": "Kigali City, Gasabo, Kimironko, Bibare, Nyagatovu",
+    "depthLevel": 4,
+    "parentLocationId": 10,
+    "parentLocationName": "Bibare",
+    "root": false,
+    "leaf": true
+  }
+]
 ```
+
+### **Get Location by ID with Full Hierarchy**
+```http
+GET /api/locations/{id}
+```
+**Example**: `GET /api/locations/12`
 
 ### **Get Children of a Location**
 ```http
-GET /api/hierarchical-locations/1/children
+GET /api/locations/{id}/children
 ```
+**Example**: `GET /api/locations/1/children` (Get all districts in Kigali City)
 
 ### **Get Full Hierarchy Path**
 ```http
-GET /api/hierarchical-locations/5/path
+GET /api/locations/{id}/path
 ```
+**Example**: `GET /api/locations/12/path`
 **Response**: `"Kigali City → Gasabo → Kimironko → Bibare → Nyagatovu"`
 
 ### **Get Locations by Type**
 ```http
-GET /api/hierarchical-locations/type/DISTRICT
-GET /api/hierarchical-locations/type/VILLAGE
+GET /api/locations/type/{type}
 ```
+**Examples**:
+- `GET /api/locations/type/PROVINCE`
+- `GET /api/locations/type/DISTRICT`
+- `GET /api/locations/type/VILLAGE`
 
 ### **Search Locations by Name**
 ```http
-GET /api/hierarchical-locations/search?name=Kigali
+GET /api/locations/search?name={name}
 ```
+**Example**: `GET /api/locations/search?name=Kigali`
 
-### **Find Village by Name (For Registration)**
+### **Find Village by Name (For User Registration)**
 ```http
-GET /api/hierarchical-locations/village/Nyagatovu
+GET /api/locations/village/{villageName}
 ```
+**Example**: `GET /api/locations/village/Nyagatovu`
 
 ### **Create New Location**
 ```http
-POST /api/hierarchical-locations
+POST /api/locations
 Content-Type: application/json
 
 {
   "name": "New Village",
   "code": "NV",
   "type": "VILLAGE",
-  "parentId": 4
+  "parentId": 10
 }
+```
+
+### **Delete Location (Only if No Children)**
+```http
+DELETE /api/locations/{id}
 ```
 
 ### **Get Hierarchy Statistics**
 ```http
-GET /api/hierarchical-locations/statistics
+GET /api/locations/statistics
 ```
-**Response**:
+**Response Example**:
 ```json
 {
-  "totalLocations": 15,
-  "provinces": 5,
-  "districts": 8,
+  "totalLocations": 13,
+  "provinces": 3,
+  "districts": 2,
   "sectors": 2,
   "cells": 2,
   "villages": 2
@@ -97,119 +130,9 @@ GET /api/hierarchical-locations/statistics
 
 ---
 
-## 📍 Location Endpoints
+## 👤 User Endpoints - Village-Based Registration
 
-### Single Location Table (Complete Hierarchy)
-
-#### Create Location (Requirement #2)
-```http
-POST /api/locations
-Content-Type: application/json
-
-{
-  "provinceCode": "KGL",
-  "provinceName": "Kigali",
-  "districtName": "Gasabo",
-  "sectorName": "Kimisagara",
-  "cellName": "Rugenge",
-  "villageName": "Kiyovu"
-}
-```
-
-#### Create Partial Location (District Level Only)
-```http
-POST /api/locations
-Content-Type: application/json
-
-{
-  "provinceCode": "KGL",
-  "provinceName": "Kigali",
-  "districtName": "Gasabo"
-}
-```
-
-#### Get All Locations
-```http
-GET /api/locations
-```
-
-#### Get Location by ID
-```http
-GET /api/locations/1
-```
-
-#### Get All Provinces
-```http
-GET /api/locations/provinces
-```
-
-#### Get Locations by Province Code
-```http
-GET /api/locations/province/KGL
-```
-
-#### Get Locations by Province with Pagination (Requirement #3)
-```http
-GET /api/locations/province/KGL/paginated?page=0&size=10
-```
-
-#### Get Districts by Province Code
-```http
-GET /api/locations/province/KGL/districts
-```
-
-#### Get Sectors by Province and District
-```http
-GET /api/locations/province/KGL/district/Gasabo/sectors
-```
-
-#### Check if Province Exists (Requirement #7)
-```http
-GET /api/locations/province/KGL/exists
-Response: true/false
-```
-
-#### Check if District Exists in Province (Requirement #7)
-```http
-GET /api/locations/province/KGL/district/Gasabo/exists
-Response: true/false
-```
-
-#### Get Locations by Level
-```http
-GET /api/locations/level/Village
-```
-
-#### Search Locations
-```http
-GET /api/locations/search?keyword=gasabo
-```
-
-#### Get Location Statistics
-```http
-GET /api/locations/statistics
-```
-
-#### Get Complete Hierarchy Locations
-```http
-GET /api/locations/complete
-```
-
-#### Get All Village Locations (For User Registration)
-```http
-GET /api/locations/villages
-```
-
-#### Get All Village Names Only
-```http
-GET /api/locations/villages/names
-```
-
----
-
-## 👤 User Endpoints
-
-#### Register User with Village in Request Body (RECOMMENDED)
+#### Register User with Village Name (RECOMMENDED)
 ```http
 POST /api/users/register
 Content-Type: application/json
@@ -223,39 +146,11 @@ Content-Type: application/json
   "villageName": "Kiyovu"
 }
 ```
-**Note**: The villageName automatically links the user to the complete location hierarchy (Province → District → Sector → Cell → Village)
+**Note**: The villageName automatically links the user to the complete location hierarchy (Province → District → Sector → Cell → Village). The user's `fullLocation` will show: "Kigali City, Gasabo, Kimisagara, Rugenge, Kiyovu"
 
-#### Register User without Village (Optional)
+#### Register User with Village (Separate Endpoint)
 ```http
-POST /api/users/register
-Content-Type: application/json
-
-{
-  "name": "John Doe",
-  "email": "john@example.com",
-  "password": "password123",
-  "phone": "0781234567",
-  "userType": "CLIENT"
-}
-```
-
-#### Register User with Location ID (Legacy)
-```http
-POST /api/users/register?locationId=1
-Content-Type: application/json
-
-{
-  "name": "John Doe",
-  "email": "john@example.com",
-  "password": "password123",
-  "phone": "0781234567",
-  "userType": "CLIENT"
-}
-```
-
-#### Register User by Village Name Parameter (Alternative)
-```http
-POST /api/users/register/village?villageName=Kiyovu
+POST /api/users/register/village?villageName=Nyagatovu
 Content-Type: application/json
 
 {
@@ -267,9 +162,36 @@ Content-Type: application/json
 }
 ```
 
+#### Register User with DTO
+```http
+POST /api/users/register/dto
+Content-Type: application/json
+
+{
+  "name": "DTO User",
+  "email": "dto.user@example.com",
+  "password": "password123",
+  "phone": "0786789014",
+  "userType": "BOTH",
+  "villageName": "Kiyovu"
+}
+```
+
 #### Get User by ID
 ```http
-GET /api/users/1
+GET /api/users/{id}
+```
+**Response includes full location hierarchy**:
+```json
+{
+  "id": 1,
+  "name": "Alice Uwimana",
+  "email": "alice@example.com",
+  "userType": "CLIENT",
+  "fullLocation": "Kigali City, Gasabo, Kimisagara, Rugenge, Kiyovu",
+  "provider": false,
+  "client": true
+}
 ```
 
 #### Get All Users with Sorting (Requirement #3)
@@ -282,45 +204,46 @@ GET /api/users?sortBy=name&direction=asc
 GET /api/users/type/PROVIDER?page=0&size=10&sortBy=name&direction=asc
 ```
 
-#### Get Users by Province Code (Requirement #8)
+### **Hierarchical Location Queries (Requirement #8)**
+
+#### Get Users by Province Code
 ```http
 GET /api/users/province/code/KGL
 ```
 
-#### Get Users by Province Name (Requirement #8)
+#### Get Users by Province Name
 ```http
-GET /api/users/province/name/Kigali
+GET /api/users/province/name/Kigali%20City
 ```
+**Note**: Uses hierarchical traversal to find all users in any location within the province
 
 #### Get Users by District Name
 ```http
 GET /api/users/district/name/Gasabo
 ```
+**Note**: Finds users in the district or any of its child locations (sectors, cells, villages)
 
 #### Get Users by Sector Name
 ```http
-GET /api/users/sector/name/Kimisagara
+GET /api/users/sector/name/Kimironko
 ```
 
 #### Get Users by Cell Name
 ```http
-GET /api/users/cell/name/Rugenge
+GET /api/users/cell/name/Bibare
 ```
 
 #### Get Users by Village Name
 ```http
 GET /api/users/village/name/Kiyovu
 ```
+**Note**: Direct match since users are typically registered at village level
 
-#### Get Users by Location Hierarchy
+#### Get Users by Location Hierarchy (Flexible)
 ```http
-GET /api/users/location?provinceCode=KGL&districtName=Gasabo&sectorName=Kimisagara&cellName=Rugenge&villageName=Kiyovu
+GET /api/users/location?provinceName=Kigali%20City&districtName=Gasabo&villageName=Kiyovu
 ```
-
-#### Get Users by Location ID
-```http
-GET /api/users/location/1
-```
+**Note**: Searches from most specific (village) to least specific (province)
 
 #### Get Providers by Province with Pagination
 ```http
@@ -339,9 +262,14 @@ GET /api/users/exists/phone?phone=0781234567
 Response: true/false
 ```
 
+#### Get User Statistics
+```http
+GET /api/users/statistics
+```
+
 #### Update User
 ```http
-PUT /api/users/1
+PUT /api/users/{id}
 Content-Type: application/json
 
 {
@@ -352,7 +280,7 @@ Content-Type: application/json
 
 #### Delete User
 ```http
-DELETE /api/users/1
+DELETE /api/users/{id}
 ```
 
 ---
@@ -414,33 +342,40 @@ Content-Type: application/json
 
 ---
 
-## 📋 Job Endpoints
+## 📋 Job Endpoints - With Hierarchical Locations
 
-#### Create Job
+#### Create Job (Use Village Location ID)
 ```http
-POST /api/jobs?clientId=1&categoryId=1&locationId=1
+POST /api/jobs?clientId=1&categoryId=1&locationId=13
 Content-Type: application/json
 
 {
-  "title": "Fix leaking sink",
-  "description": "Kitchen sink is leaking badly",
+  "title": "Fix leaking sink in Kiyovu",
+  "description": "Kitchen sink is leaking badly, need urgent repair",
   "budget": 15000
 }
 ```
+**Note**: Use village location ID (e.g., 13 for Kiyovu) to link job to complete location hierarchy
+
+#### Get All Jobs (Shows Full Location Hierarchy)
+```http
+GET /api/jobs
+```
+**Response includes location hierarchy for each job**
 
 #### Assign Provider to Job
 ```http
-PUT /api/jobs/1/assign?providerId=2
+PUT /api/jobs/{id}/assign?providerId={providerId}
 ```
 
 #### Complete Job
 ```http
-PUT /api/jobs/1/complete
+PUT /api/jobs/{id}/complete
 ```
 
 #### Get Job by ID
 ```http
-GET /api/jobs/1
+GET /api/jobs/{id}
 ```
 
 #### Get All Jobs with Pagination & Sorting (Requirement #3)
@@ -455,22 +390,35 @@ GET /api/jobs/status/OPEN?page=0&size=10
 
 #### Get Jobs by Client
 ```http
-GET /api/jobs/client/1?page=0&size=10
+GET /api/jobs/client/{clientId}?page=0&size=10
 ```
 
 #### Get Jobs by Provider
 ```http
-GET /api/jobs/provider/2?page=0&size=10
+GET /api/jobs/provider/{providerId}?page=0&size=10
 ```
 
-#### Get Jobs by Province
+#### Get Jobs by Province Code
 ```http
-GET /api/jobs/province/KGL?page=0&size=10
+GET /api/jobs/province/{provinceCode}?page=0&size=10
 ```
 
-#### Search Jobs
+#### Get Job Statistics by Province
 ```http
-GET /api/jobs/search?categoryId=1&province=KGL&page=0&size=10
+GET /api/jobs/statistics/province
+```
+**Response Example**:
+```json
+[
+  ["Kigali City", 5],
+  ["Eastern Province", 2],
+  ["Western Province", 1]
+]
+```
+
+#### Search Jobs by Category and Province
+```http
+GET /api/jobs/search?categoryId=1&provinceCode=KGL&page=0&size=10
 ```
 
 ---
@@ -508,64 +456,82 @@ GET /api/categories/name/Plumbing
 
 ## 📊 Sample Test Scenarios
 
-### Test Requirement #2: Saving Location
+### Test Hierarchical Location System
 ```bash
-# 1. Create Complete Location Hierarchy
-curl -X POST http://localhost:8080/api/locations \
+# 1. Get all provinces
+curl http://localhost:8080/api/locations/provinces
+
+# 2. Get all villages
+curl http://localhost:8080/api/locations/villages
+
+# 3. Find village by name
+curl http://localhost:8080/api/locations/village/Kiyovu
+
+# 4. Get location hierarchy path
+curl http://localhost:8080/api/locations/12/path
+```
+
+### Test Village-Based User Registration
+```bash
+# 1. Register user with village name
+curl -X POST http://localhost:8080/api/users/register \
   -H "Content-Type: application/json" \
   -d '{
-    "provinceCode":"KGL",
-    "provinceName":"Kigali",
-    "districtName":"Gasabo",
-    "sectorName":"Kimisagara",
-    "cellName":"Rugenge",
-    "villageName":"Kiyovu"
+    "name": "Test User",
+    "email": "test@example.com",
+    "password": "password123",
+    "phone": "0781234567",
+    "userType": "CLIENT",
+    "villageName": "Kiyovu"
   }'
 
-# 2. Create Partial Location (District Level)
-curl -X POST http://localhost:8080/api/locations \
-  -H "Content-Type: application/json" \
-  -d '{
-    "provinceCode":"EST",
-    "provinceName":"Eastern Province",
-    "districtName":"Rwamagana"
-  }'
+# 2. Get all users (shows full location hierarchy)
+curl http://localhost:8080/api/users
 ```
 
 ### Test Requirement #3: Pagination & Sorting
 ```bash
 # Get providers sorted by rating, page 0, size 10
-curl http://localhost:8080/api/providers?page=0&size=10&sortBy=rating&direction=desc
+curl "http://localhost:8080/api/providers?page=0&size=10&sortBy=rating&direction=desc"
 ```
 
 ### Test Requirement #4: Many-to-Many
 ```bash
 # Add skill to provider
-curl -X POST http://localhost:8080/api/providers/1/skills?skillName=Plumbing
+curl -X POST "http://localhost:8080/api/providers/1/skills?skillName=Plumbing"
 ```
 
 ### Test Requirement #7: existsBy()
 ```bash
 # Check if email exists
-curl http://localhost:8080/api/users/exists/email?email=john@example.com
+curl "http://localhost:8080/api/users/exists/email?email=test@example.com"
 ```
 
-### Test Requirement #8: Users by Province and Location Hierarchy
+### Test Requirement #8: Hierarchical Location Queries
 ```bash
-# By province code
-curl http://localhost:8080/api/users/province/code/KGL
+# By province name (hierarchical traversal)
+curl "http://localhost:8080/api/users/province/name/Kigali%20City"
 
-# By province name
-curl http://localhost:8080/api/users/province/name/Kigali
+# By district name (includes all child locations)
+curl "http://localhost:8080/api/users/district/name/Gasabo"
 
-# By district name
-curl http://localhost:8080/api/users/district/name/Gasabo
+# By village name (direct match)
+curl "http://localhost:8080/api/users/village/name/Kiyovu"
 
-# By village name
-curl http://localhost:8080/api/users/village/name/Kiyovu
+# By complete location hierarchy (flexible)
+curl "http://localhost:8080/api/users/location?provinceName=Kigali%20City&districtName=Gasabo&villageName=Kiyovu"
+```
 
-# By complete location hierarchy
-curl "http://localhost:8080/api/users/location?provinceCode=KGL&districtName=Gasabo&sectorName=Kimisagara"
+### Test Job Creation with Hierarchical Locations
+```bash
+# Create job with village location ID
+curl -X POST "http://localhost:8080/api/jobs?clientId=1&categoryId=1&locationId=13" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Fix sink in Kiyovu",
+    "description": "Urgent plumbing repair needed",
+    "budget": 15000
+  }'
 ```
 
 ---
@@ -620,10 +586,33 @@ curl "http://localhost:8080/api/users/location?provinceCode=KGL&districtName=Gas
 
 ## ✅ All Requirements Covered
 
-- ✅ Requirement #2: Location saving endpoints
-- ✅ Requirement #3: Pagination & Sorting on all list endpoints
-- ✅ Requirement #4: Many-to-Many (Provider ↔ Skill)
-- ✅ Requirement #5: One-to-Many (Location → User, Location → Job)
-- ✅ Requirement #6: One-to-One (User → ProviderProfile)
-- ✅ Requirement #7: existsBy() methods
-- ✅ Requirement #8: Users by province and complete location hierarchy (code, name, district, sector, cell, village)
+- ✅ **Requirement #2**: Hierarchical location system with single Location table
+- ✅ **Requirement #3**: Pagination & Sorting on all list endpoints  
+- ✅ **Requirement #4**: Many-to-Many (Provider ↔ Skill)
+- ✅ **Requirement #5**: One-to-Many (Location → User, Location → Job) with hierarchical relationships
+- ✅ **Requirement #6**: One-to-One (User → ProviderProfile)
+- ✅ **Requirement #7**: existsBy() methods for email and phone validation
+- ✅ **Requirement #8**: Users by province with hierarchical location traversal (code, name, district, sector, cell, village)
+
+## 🌟 **Key Features of Unified Hierarchical System**
+
+### **Single Location Table**
+- All administrative levels in one table: `locations`
+- Self-referencing parent-child relationships
+- Complete hierarchy: Province → District → Sector → Cell → Village
+
+### **Village-Based User Registration**
+- Users register by selecting village name
+- Automatically linked to complete location hierarchy
+- Full location context available: "Kigali City, Gasabo, Kimironko, Bibare, Nyagatovu"
+
+### **Hierarchical Location Queries**
+- Query users by any administrative level
+- Automatic traversal of parent-child relationships
+- Efficient location-based filtering for jobs and providers
+
+### **Tree Data Structure Operations**
+- Get children of any location
+- Get full hierarchy path
+- Navigate up and down the location tree
+- Location statistics and analytics

@@ -1,12 +1,12 @@
 {
   "info": {
-    "name": "FixMatch API - Complete with Hierarchical Location System",
-    "description": "Complete API collection for FixMatch with advanced hierarchical location system using Adjacency List Model and village-based registration",
+    "name": "FixMatch API - Unified Hierarchical Location System",
+    "description": "Complete API collection for FixMatch with unified hierarchical location system using single Location table with parent-child relationships (Adjacency List Model). Supports Province → District → Sector → Cell → Village hierarchy with village-based user registration.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
-      "name": "0. Hierarchical Locations (NEW)",
+      "name": "1. Hierarchical Locations",
       "item": [
         {
           "name": "Initialize Rwanda Hierarchy",
@@ -14,11 +14,11 @@
             "method": "POST",
             "header": [],
             "url": {
-              "raw": "http://localhost:8080/api/hierarchical-locations/initialize",
+              "raw": "http://localhost:8080/api/locations/initialize",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8080",
-              "path": ["api", "hierarchical-locations", "initialize"]
+              "path": ["api", "locations", "initialize"]
             }
           }
         },
@@ -28,11 +28,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:8080/api/hierarchical-locations/provinces",
+              "raw": "http://localhost:8080/api/locations/provinces",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8080",
-              "path": ["api", "hierarchical-locations", "provinces"]
+              "path": ["api", "locations", "provinces"]
             }
           }
         },
@@ -42,25 +42,25 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:8080/api/hierarchical-locations/villages",
+              "raw": "http://localhost:8080/api/locations/villages",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8080",
-              "path": ["api", "hierarchical-locations", "villages"]
+              "path": ["api", "locations", "villages"]
             }
           }
         },
         {
-          "name": "Get Location with Full Path",
+          "name": "Get Location by ID with Full Hierarchy",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:8080/api/hierarchical-locations/12",
+              "raw": "http://localhost:8080/api/locations/12",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8080",
-              "path": ["api", "hierarchical-locations", "12"]
+              "path": ["api", "locations", "12"]
             }
           }
         },
@@ -70,11 +70,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:8080/api/hierarchical-locations/1/children",
+              "raw": "http://localhost:8080/api/locations/1/children",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8080",
-              "path": ["api", "hierarchical-locations", "1", "children"]
+              "path": ["api", "locations", "1", "children"]
             }
           }
         },
@@ -84,11 +84,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:8080/api/hierarchical-locations/12/path",
+              "raw": "http://localhost:8080/api/locations/12/path",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8080",
-              "path": ["api", "hierarchical-locations", "12", "path"]
+              "path": ["api", "locations", "12", "path"]
             }
           }
         },
@@ -98,11 +98,25 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:8080/api/hierarchical-locations/type/VILLAGE",
+              "raw": "http://localhost:8080/api/locations/type/VILLAGE",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8080",
-              "path": ["api", "hierarchical-locations", "type", "VILLAGE"]
+              "path": ["api", "locations", "type", "VILLAGE"]
+            }
+          }
+        },
+        {
+          "name": "Get Locations by Type (Districts)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/locations/type/DISTRICT",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "locations", "type", "DISTRICT"]
             }
           }
         },
@@ -112,11 +126,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:8080/api/hierarchical-locations/search?name=Kigali",
+              "raw": "http://localhost:8080/api/locations/search?name=Kigali",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8080",
-              "path": ["api", "hierarchical-locations", "search"],
+              "path": ["api", "locations", "search"],
               "query": [
                 {
                   "key": "name",
@@ -127,16 +141,16 @@
           }
         },
         {
-          "name": "Find Village by Name",
+          "name": "Find Village by Name (For Registration)",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:8080/api/hierarchical-locations/village/Kiyovu",
+              "raw": "http://localhost:8080/api/locations/village/Kiyovu",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8080",
-              "path": ["api", "hierarchical-locations", "village", "Kiyovu"]
+              "path": ["api", "locations", "village", "Kiyovu"]
             }
           }
         },
@@ -146,11 +160,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:8080/api/hierarchical-locations/statistics",
+              "raw": "http://localhost:8080/api/locations/statistics",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8080",
-              "path": ["api", "hierarchical-locations", "statistics"]
+              "path": ["api", "locations", "statistics"]
             }
           }
         },
@@ -169,21 +183,35 @@
               "raw": "{\n  \"name\": \"New Village\",\n  \"code\": \"NV\",\n  \"type\": \"VILLAGE\",\n  \"parentId\": 10\n}"
             },
             "url": {
-              "raw": "http://localhost:8080/api/hierarchical-locations",
+              "raw": "http://localhost:8080/api/locations",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8080",
-              "path": ["api", "hierarchical-locations"]
+              "path": ["api", "locations"]
+            }
+          }
+        },
+        {
+          "name": "Delete Location (Only if No Children)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/locations/15",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "locations", "15"]
             }
           }
         }
       ]
     },
     {
-      "name": "1. Locations (Legacy System)",
+      "name": "2. Users - Village-Based Registration",
       "item": [
         {
-          "name": "Create Location",
+          "name": "Register User with Village Name (Recommended)",
           "request": {
             "method": "POST",
             "header": [
@@ -194,111 +222,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"provinceCode\": \"KGL\",\n  \"provinceName\": \"Kigali\",\n  \"districtName\": \"Gasabo\",\n  \"sectorName\": \"Kimisagara\",\n  \"cellName\": \"Rugenge\",\n  \"villageName\": \"Kiyovu\"\n}"
-            },
-            "url": {
-              "raw": "http://localhost:8080/api/locations",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["api", "locations"]
-            }
-          }
-        },
-        {
-          "name": "Get All Locations",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:8080/api/locations",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["api", "locations"]
-            }
-          }
-        },
-        {
-          "name": "Get All Village Locations",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:8080/api/locations/villages",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["api", "locations", "villages"]
-            }
-          }
-        },
-        {
-          "name": "Get All Village Names Only",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:8080/api/locations/villages/names",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["api", "locations", "villages", "names"]
-            }
-          }
-        },
-        {
-          "name": "Get Locations by Province",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:8080/api/locations/province/KGL",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["api", "locations", "province", "KGL"]
-            }
-          }
-        },
-        {
-          "name": "Search Locations",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:8080/api/locations/search?keyword=gasabo",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["api", "locations", "search"],
-              "query": [
-                {
-                  "key": "keyword",
-                  "value": "gasabo"
-                }
-              ]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "2. Users - Hierarchical Registration",
-      "item": [
-        {
-          "name": "Register User with Village (Body)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Hierarchical Test User\",\n  \"email\": \"hierarchical.test@example.com\",\n  \"password\": \"password123\",\n  \"phone\": \"0786789012\",\n  \"userType\": \"CLIENT\",\n  \"villageName\": \"Kiyovu\"\n}"
+              "raw": "{\n  \"name\": \"Village User Test\",\n  \"email\": \"village.user@example.com\",\n  \"password\": \"password123\",\n  \"phone\": \"0786789012\",\n  \"userType\": \"CLIENT\",\n  \"villageName\": \"Kiyovu\"\n}"
             },
             "url": {
               "raw": "http://localhost:8080/api/users/register",
@@ -310,7 +234,7 @@
           }
         },
         {
-          "name": "Register User with Village (Param)",
+          "name": "Register User with Village (Separate Endpoint)",
           "request": {
             "method": "POST",
             "header": [
@@ -339,7 +263,7 @@
           }
         },
         {
-          "name": "Register User (Basic)",
+          "name": "Register User with DTO",
           "request": {
             "method": "POST",
             "header": [
@@ -350,19 +274,19 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\",\n  \"phone\": \"0781234567\",\n  \"userType\": \"CLIENT\"\n}"
+              "raw": "{\n  \"name\": \"DTO User Test\",\n  \"email\": \"dto.user@example.com\",\n  \"password\": \"password123\",\n  \"phone\": \"0786789014\",\n  \"userType\": \"BOTH\",\n  \"villageName\": \"Kiyovu\"\n}"
             },
             "url": {
-              "raw": "http://localhost:8080/api/users/register",
+              "raw": "http://localhost:8080/api/users/register/dto",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8080",
-              "path": ["api", "users", "register"]
+              "path": ["api", "users", "register", "dto"]
             }
           }
         },
         {
-          "name": "Get All Users",
+          "name": "Get All Users (Shows Full Location Hierarchy)",
           "request": {
             "method": "GET",
             "header": [],
@@ -390,6 +314,20 @@
           }
         },
         {
+          "name": "Get Users by Province NAME",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/users/province/name/Kigali%20City",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "users", "province", "name", "Kigali City"]
+            }
+          }
+        },
+        {
           "name": "Get Users by Province CODE",
           "request": {
             "method": "GET",
@@ -400,20 +338,6 @@
               "host": ["localhost"],
               "port": "8080",
               "path": ["api", "users", "province", "code", "KGL"]
-            }
-          }
-        },
-        {
-          "name": "Get Users by Village Name",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:8080/api/users/village/name/Kiyovu",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["api", "users", "village", "name", "Kiyovu"]
             }
           }
         },
@@ -432,20 +356,62 @@
           }
         },
         {
-          "name": "Get Users by Location Hierarchy",
+          "name": "Get Users by Sector Name",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:8080/api/users/location?provinceCode=KGL&districtName=Gasabo&villageName=Kiyovu",
+              "raw": "http://localhost:8080/api/users/sector/name/Kimironko",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "users", "sector", "name", "Kimironko"]
+            }
+          }
+        },
+        {
+          "name": "Get Users by Cell Name",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/users/cell/name/Bibare",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "users", "cell", "name", "Bibare"]
+            }
+          }
+        },
+        {
+          "name": "Get Users by Village Name",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/users/village/name/Kiyovu",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "users", "village", "name", "Kiyovu"]
+            }
+          }
+        },
+        {
+          "name": "Get Users by Location Hierarchy (Flexible)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/users/location?provinceName=Kigali%20City&districtName=Gasabo&villageName=Kiyovu",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8080",
               "path": ["api", "users", "location"],
               "query": [
                 {
-                  "key": "provinceCode",
-                  "value": "KGL"
+                  "key": "provinceName",
+                  "value": "Kigali City"
                 },
                 {
                   "key": "districtName",
@@ -465,7 +431,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:8080/api/users/exists/email?email=john@example.com",
+              "raw": "http://localhost:8080/api/users/exists/email?email=village.user@example.com",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8080",
@@ -473,9 +439,43 @@
               "query": [
                 {
                   "key": "email",
-                  "value": "john@example.com"
+                  "value": "village.user@example.com"
                 }
               ]
+            }
+          }
+        },
+        {
+          "name": "Check Phone Exists",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/users/exists/phone?phone=0786789012",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "users", "exists", "phone"],
+              "query": [
+                {
+                  "key": "phone",
+                  "value": "0786789012"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get User Statistics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/users/statistics",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "users", "statistics"]
             }
           }
         }
@@ -578,10 +578,10 @@
       ]
     },
     {
-      "name": "4. Jobs",
+      "name": "4. Jobs - With Hierarchical Locations",
       "item": [
         {
-          "name": "Create Job",
+          "name": "Create Job (Use Village Location ID)",
           "request": {
             "method": "POST",
             "header": [
@@ -592,10 +592,10 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Fix leaking sink\",\n  \"description\": \"Kitchen sink is leaking badly\",\n  \"budget\": 15000\n}"
+              "raw": "{\n  \"title\": \"Fix leaking sink in Kiyovu\",\n  \"description\": \"Kitchen sink is leaking badly, need urgent repair\",\n  \"budget\": 15000\n}"
             },
             "url": {
-              "raw": "http://localhost:8080/api/jobs?clientId=1&categoryId=1&locationId=1",
+              "raw": "http://localhost:8080/api/jobs?clientId=1&categoryId=1&locationId=13",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8080",
@@ -611,14 +611,15 @@
                 },
                 {
                   "key": "locationId",
-                  "value": "1"
+                  "value": "13",
+                  "description": "Kiyovu Village ID"
                 }
               ]
             }
           }
         },
         {
-          "name": "Get All Jobs",
+          "name": "Get All Jobs (Shows Full Location Hierarchy)",
           "request": {
             "method": "GET",
             "header": [],
@@ -660,12 +661,40 @@
           }
         },
         {
+          "name": "Get Jobs by Province Code",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/jobs/province/KGL",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "jobs", "province", "KGL"]
+            }
+          }
+        },
+        {
+          "name": "Get Job Statistics by Province",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/jobs/statistics/province",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "jobs", "statistics", "province"]
+            }
+          }
+        },
+        {
           "name": "Assign Provider to Job",
           "request": {
             "method": "PUT",
             "header": [],
             "url": {
-              "raw": "http://localhost:8080/api/jobs/1/assign?providerId=2",
+              "raw": "http://localhost:8080/api/jobs/1/assign?providerId=3",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8080",
@@ -673,7 +702,27 @@
               "query": [
                 {
                   "key": "providerId",
-                  "value": "2"
+                  "value": "3"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Job Status",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/jobs/1/status?status=IN_PROGRESS",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "jobs", "1", "status"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "IN_PROGRESS"
                 }
               ]
             }

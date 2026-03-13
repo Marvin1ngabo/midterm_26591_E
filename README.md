@@ -1,11 +1,11 @@
-# FixMatch Backend - Advanced Hierarchical Location System
+# FixMatch Backend - Unified Hierarchical Location System
 
 ## 📋 Project Overview
-FixMatch is a comprehensive gig management system backend built with Spring Boot, featuring an advanced **hierarchical location system** using the **Adjacency List Model**. This demonstrates sophisticated database relationships, tree data structures, and modern JPA functionalities.
+FixMatch is a comprehensive gig management system backend built with Spring Boot, featuring a **unified hierarchical location system** using the **Adjacency List Model**. This demonstrates sophisticated database relationships, tree data structures, and modern JPA functionalities with a single Location table architecture.
 
-## 🌳 **Hierarchical Location Architecture**
+## 🌳 **Unified Hierarchical Location Architecture**
 
-### **Design Pattern: Adjacency List Model**
+### **Design Pattern: Adjacency List Model (Single Table)**
 ```
 Province (Root)
 └── District
@@ -20,47 +20,53 @@ Kigali City → Gasabo → Kimironko → Bibare → Nyagatovu
 ```
 
 ### **Key Features**
-- ✅ **Self-referencing relationships** (parent-child)
+- ✅ **Single Location table** with self-referencing relationships
 - ✅ **Tree data structure** with recursive operations
 - ✅ **Full path generation** and navigation
 - ✅ **Village-based user registration** with automatic hierarchy mapping
-- ✅ **Flexible queries** at any hierarchy level
+- ✅ **Hierarchical queries** at any level (province, district, sector, cell, village)
 - ✅ **Scalable design** supporting unlimited depth
-- ✅ **Backward compatibility** with legacy flat location system
+- ✅ **Clean architecture** with unified location system
 
 ## 🎯 Assessment Requirements Coverage
 
 ### ✅ 1. Entity Relationship Diagram (ERD) - 7 Tables
 
 **Entities Created:**
-1. **HierarchicalLocation** - Self-referencing hierarchical location system (NEW)
-2. **Location** - Legacy flat location structure (maintained for compatibility)
-3. **User** - Both clients and service providers with hierarchical location support
-4. **ProviderProfile** - Extended profile for providers
-5. **ServiceCategory** - Service categories (Plumbing, Cleaning, etc.)
-6. **Job** - Job postings and bookings
-7. **Skill** - Skills that providers possess
+1. **Location** - Unified hierarchical location system (single table for all levels)
+2. **User** - Both clients and service providers with hierarchical location support
+3. **ProviderProfile** - Extended profile for providers
+4. **ServiceCategory** - Service categories (Plumbing, Cleaning, etc.)
+5. **Job** - Job postings and bookings
+6. **Skill** - Skills that providers possess
+7. **LocationType** - Enum for location types (PROVINCE, DISTRICT, SECTOR, CELL, VILLAGE)
 
 **Advanced Relationships:**
-- **HierarchicalLocation → HierarchicalLocation** (Self-referencing, Parent-Child) 🌳
-- **HierarchicalLocation → User** (One-to-Many)
-- **Location → User** (One-to-Many - Legacy)
-- **Location → Job** (One-to-Many - Legacy)
+- **Location → Location** (Self-referencing, Parent-Child) 🌳
+- **Location → User** (One-to-Many)
+- **Location → Job** (One-to-Many)
 - **User → ProviderProfile** (One-to-One)
 - **ProviderProfile ↔ Skill** (Many-to-Many)
 - **User → Job** (One-to-Many as client/provider)
 - **ServiceCategory → Job** (One-to-Many)
 
-### ✅ 2. Location Saving Functionality
-**Hierarchical System (NEW):**
-- `POST /api/hierarchical-locations` - Create locations with parent-child relationships
-- `POST /api/hierarchical-locations/initialize` - Initialize Rwanda administrative hierarchy
-- Automatic tree structure validation and path generation
+### ✅ 2. Unified Hierarchical Location System
+**Database Structure:**
+```sql
+CREATE TABLE locations (
+    location_id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    code VARCHAR(10),
+    type VARCHAR(20) NOT NULL CHECK (type IN ('PROVINCE','DISTRICT','SECTOR','CELL','VILLAGE')),
+    parent_location_id BIGINT REFERENCES locations(location_id)
+);
+```
 
-**Legacy System (Backward Compatibility):**
-- `POST /api/locations` - Create flat locations with complete hierarchy in single record
-- Support for partial hierarchy (district-level only)
-- Maintains existing functionality
+**Features:**
+- `POST /api/locations/initialize` - Initialize Rwanda administrative hierarchy
+- `POST /api/locations` - Create locations with parent-child relationships
+- Automatic tree structure validation and path generation
+- Village-based user registration with complete hierarchy linking
 
 ### ✅ 3. Pagination & Sorting
 **All list endpoints support:**
@@ -84,8 +90,7 @@ GET /api/jobs?page=0&size=20&sortBy=createdAt&direction=desc
 
 ### ✅ 5. One-to-Many Relationships
 **Multiple One-to-Many relationships:**
-- **HierarchicalLocation → User** (One location has many users)
-- **Location → User** (Legacy - One location has many users)
+- **Location → User** (One location has many users)
 - **Location → Job** (One location has many jobs)
 - **User → Job** (One user can have many jobs as client)
 - **ServiceCategory → Job** (One category has many jobs)
@@ -102,29 +107,18 @@ GET /api/jobs?page=0&size=20&sortBy=createdAt&direction=desc
 ```http
 GET /api/users/exists/email?email=john@example.com
 GET /api/users/exists/phone?phone=0781234567
-GET /api/locations/province/KGL/exists
-GET /api/locations/province/KGL/district/Gasabo/exists
 ```
 
 ### ✅ 8. Users by Province and Complete Location Hierarchy
 **Hierarchical System Queries:**
 ```http
-GET /api/hierarchical-locations/{locationId}/users
-GET /api/hierarchical-locations/provinces
-GET /api/hierarchical-locations/villages
-GET /api/hierarchical-locations/{id}/children
-GET /api/hierarchical-locations/{id}/path
-```
-
-**Legacy System Queries:**
-```http
+GET /api/users/province/name/Kigali%20City
 GET /api/users/province/code/KGL
-GET /api/users/province/name/Kigali
 GET /api/users/district/name/Gasabo
-GET /api/users/sector/name/Kimisagara
-GET /api/users/cell/name/Rugenge
+GET /api/users/sector/name/Kimironko
+GET /api/users/cell/name/Bibare
 GET /api/users/village/name/Kiyovu
-GET /api/users/location?provinceCode=KGL&districtName=Gasabo&villageName=Kiyovu
+GET /api/users/location?provinceName=Kigali%20City&districtName=Gasabo&villageName=Kiyovu
 ```
 
 ## 🚀 **Quick Start Guide**
@@ -148,14 +142,14 @@ spring.datasource.password=your_password
 # 3. Run application
 mvn spring-boot:run
 
-# 4. Initialize hierarchical location system
-curl -X POST http://localhost:8080/api/hierarchical-locations/initialize
+# 4. Application automatically initializes hierarchical location system
+# Check logs for: "Database seeding completed successfully!"
 ```
 
 ### **Test Village-Based Registration**
 ```bash
 # Get available villages
-curl http://localhost:8080/api/hierarchical-locations/villages
+curl http://localhost:8080/api/locations/villages
 
 # Register user with village
 curl -X POST "http://localhost:8080/api/users/register" \
@@ -170,7 +164,8 @@ curl -X POST "http://localhost:8080/api/users/register" \
   }'
 
 # Verify user appears in hierarchy queries
-curl http://localhost:8080/api/users/province/code/KGL
+curl "http://localhost:8080/api/users/province/name/Kigali%20City"
+curl "http://localhost:8080/api/users/village/name/Kiyovu"
 ```
 
 ## 🎓 **Computer Science Concepts Demonstrated**
@@ -203,39 +198,39 @@ curl http://localhost:8080/api/users/province/code/KGL
 
 ## 📊 **API Endpoints Overview**
 
-### **🌳 Hierarchical Locations (NEW)**
+### **🌳 Hierarchical Locations**
 ```http
-POST   /api/hierarchical-locations/initialize     # Initialize Rwanda hierarchy
-GET    /api/hierarchical-locations/provinces      # Get all provinces (roots)
-GET    /api/hierarchical-locations/villages       # Get all villages (leaves)
-GET    /api/hierarchical-locations/{id}           # Get location with full path
-GET    /api/hierarchical-locations/{id}/children  # Get child locations
-GET    /api/hierarchical-locations/{id}/path      # Get full hierarchy path
-GET    /api/hierarchical-locations/type/{type}    # Get locations by type
-GET    /api/hierarchical-locations/search         # Search locations by name
-POST   /api/hierarchical-locations               # Create new location
-GET    /api/hierarchical-locations/statistics     # Get hierarchy statistics
+POST   /api/locations/initialize                 # Initialize Rwanda hierarchy
+GET    /api/locations/provinces                  # Get all provinces (roots)
+GET    /api/locations/villages                   # Get all villages (leaves)
+GET    /api/locations/{id}                       # Get location with full path
+GET    /api/locations/{id}/children              # Get child locations
+GET    /api/locations/{id}/path                  # Get full hierarchy path
+GET    /api/locations/type/{type}                # Get locations by type
+GET    /api/locations/search?name={name}         # Search locations by name
+GET    /api/locations/village/{villageName}      # Find village by name
+POST   /api/locations                            # Create new location
+DELETE /api/locations/{id}                       # Delete location (if no children)
+GET    /api/locations/statistics                 # Get hierarchy statistics
 ```
 
-### **📍 Legacy Locations (Backward Compatibility)**
-```http
-POST   /api/locations                            # Create flat location
-GET    /api/locations                            # Get all locations
-GET    /api/locations/villages                   # Get village locations
-GET    /api/locations/villages/names             # Get village names only
-GET    /api/locations/province/{code}            # Get locations by province
-GET    /api/locations/search                     # Search locations
-```
-
-### **👤 Users with Hierarchical Registration**
+### **👤 Users with Village-Based Registration**
 ```http
 POST   /api/users/register                       # Register with village in body
 POST   /api/users/register/village               # Register with village param
-GET    /api/users                                # Get all users
-GET    /api/users/province/code/{code}           # Get users by province
-GET    /api/users/village/name/{name}            # Get users by village
-GET    /api/users/location                       # Get users by hierarchy
+POST   /api/users/register/dto                   # Register with DTO
+GET    /api/users                                # Get all users (shows full location)
+GET    /api/users/{id}                           # Get user by ID
+GET    /api/users/province/name/{name}           # Get users by province (hierarchical)
+GET    /api/users/province/code/{code}           # Get users by province code
+GET    /api/users/district/name/{name}           # Get users by district (hierarchical)
+GET    /api/users/sector/name/{name}             # Get users by sector (hierarchical)
+GET    /api/users/cell/name/{name}               # Get users by cell (hierarchical)
+GET    /api/users/village/name/{name}            # Get users by village (direct)
+GET    /api/users/location                       # Get users by hierarchy (flexible)
 GET    /api/users/exists/email                   # Check email exists
+GET    /api/users/exists/phone                   # Check phone exists
+GET    /api/users/statistics                     # Get user statistics
 ```
 
 ### **🔧 Providers, Jobs, Categories**
@@ -243,8 +238,8 @@ GET    /api/users/exists/email                   # Check email exists
 POST   /api/providers                            # Create provider profile
 POST   /api/providers/{id}/skills                # Add skill to provider
 GET    /api/providers/skill/{skill}              # Get providers by skill
-POST   /api/jobs                                 # Create job
-GET    /api/jobs/status/{status}                 # Get jobs by status
+POST   /api/jobs                                 # Create job (use village location ID)
+GET    /api/jobs/statistics/province             # Get job statistics by province
 POST   /api/categories                           # Create category
 ```
 
@@ -265,35 +260,34 @@ POST   /api/categories                           # Create category
 
 ## 📚 **Documentation Files**
 
-- **`API_ENDPOINTS.md`** - Complete API documentation with examples
-- **`POSTMAN_TESTING_GUIDE.md`** - Step-by-step testing instructions
-- **`VILLAGE_REGISTRATION_GUIDE.md`** - Hierarchical registration guide
-- **`HIERARCHICAL_LOCATION_GUIDE.md`** - Technical implementation details
+- **`API_ENDPOINTS.md`** - Complete API documentation with unified hierarchical system
+- **`POSTMAN_TESTING_GUIDE.md`** - Step-by-step testing instructions for unified system
+- **`HIERARCHICAL_SYSTEM_COMPLETION.md`** - Technical completion summary
+- **`FixMatch_Postman_Collection_Updated.json`** - Updated Postman collection
 - **`TESTING_GUIDE.md`** - General testing information
-- **`FixMatch_Postman_Collection_Updated.json`** - Complete Postman collection
 
 ## 🏗️ **Architecture Highlights**
 
 ### **Database Design**
-- **Hierarchical Locations**: Self-referencing tree structure
-- **Legacy Locations**: Flat structure for backward compatibility
-- **Dual System**: Both systems coexist seamlessly
-- **Data Seeding**: Automatic initialization with sample data
+- **Single Location Table**: Unified hierarchical structure with self-referencing relationships
+- **Clean Architecture**: No dual systems, single source of truth for locations
+- **Data Seeding**: Automatic initialization with Rwanda administrative hierarchy
+- **Tree Structure**: Efficient parent-child relationships using Adjacency List Model
 
 ### **Spring Boot Features**
-- **JPA Relationships**: All relationship types demonstrated
-- **Repository Patterns**: Custom queries and methods
-- **Service Layer**: Business logic separation
-- **Controller Layer**: RESTful API design
+- **JPA Relationships**: All relationship types demonstrated with hierarchical structure
+- **Repository Patterns**: Custom queries with hierarchical traversal
+- **Service Layer**: Business logic for tree operations and village-based registration
+- **Controller Layer**: RESTful API design with hierarchical endpoints
 - **Exception Handling**: Global exception management
-- **Data Validation**: Input validation and constraints
+- **Data Validation**: Input validation and tree structure constraints
 
 ### **Advanced Features**
 - **Tree Traversal**: Recursive path building and navigation
-- **Flexible Queries**: Multi-level location-based searches
-- **Automatic Linking**: Village selection auto-maps to full hierarchy
+- **Hierarchical Queries**: Multi-level location-based searches with automatic traversal
+- **Village Registration**: Automatic linking to complete location hierarchy
 - **Scalable Design**: Supports unlimited hierarchy depth
-- **Performance**: Efficient queries with proper indexing
+- **Performance**: Efficient queries with proper indexing and DTO mapping
 
 ---
 
@@ -301,18 +295,18 @@ POST   /api/categories                           # Create category
 
 | Requirement | Status | Implementation |
 |-------------|--------|----------------|
-| 1. ERD (7 Tables) | ✅ Complete | HierarchicalLocation, Location, User, ProviderProfile, ServiceCategory, Job, Skill |
-| 2. Location Saving | ✅ Complete | Both hierarchical and legacy systems |
+| 1. ERD (7 Tables) | ✅ Complete | Location, User, ProviderProfile, ServiceCategory, Job, Skill, LocationType |
+| 2. Hierarchical Location System | ✅ Complete | Single Location table with self-referencing relationships |
 | 3. Pagination & Sorting | ✅ Complete | All list endpoints support pagination/sorting |
 | 4. Many-to-Many | ✅ Complete | ProviderProfile ↔ Skill with junction table |
-| 5. One-to-Many | ✅ Complete | Multiple relationships implemented |
+| 5. One-to-Many | ✅ Complete | Multiple relationships with hierarchical structure |
 | 6. One-to-One | ✅ Complete | User → ProviderProfile |
-| 7. existsBy() Methods | ✅ Complete | Email, phone, location validation |
-| 8. Users by Province | ✅ Complete | Complete hierarchy queries + legacy support |
+| 7. existsBy() Methods | ✅ Complete | Email, phone validation |
+| 8. Users by Province | ✅ Complete | Complete hierarchical queries with traversal |
 
-**🎉 All Assessment Requirements Successfully Implemented!**
+**🎉 All Assessment Requirements Successfully Implemented with Unified Hierarchical System!**
 
-This project demonstrates advanced Spring Boot development with sophisticated database relationships, tree data structures, and comprehensive API design.
+This project demonstrates advanced Spring Boot development with sophisticated database relationships, tree data structures, and comprehensive API design using a clean, unified location architecture.
 
 ### ✅ 2. Implementation of Hierarchical Location System (2 Marks)
 
