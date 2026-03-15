@@ -291,6 +291,17 @@ You'll see a collection called **"FixMatch API - Unified Hierarchical Location S
 **URL:** `http://localhost:8080/api/users/village/name/Kiyovu`
 
 **Expected Response:** Users registered in Kiyovu village
+
+#### Test 14: Get Users by Village ID (RECOMMENDED)
+**Folder:** 2. Users - Village-Based Registration → Get Users by Village ID (RECOMMENDED)  
+**Method:** GET  
+**URL:** `http://localhost:8080/api/users/village/id/13`
+
+**Available Village IDs:**
+- Nyagatovu: ID = 12
+- Kiyovu: ID = 13
+
+**Expected Response:** Users registered in the specified village (same as village name but more efficient)
 ```json
 [
   {
@@ -790,6 +801,32 @@ true
 
 ---
 
+### ✅ Test 11B: Create Complete Hierarchy (NEW)
+**Folder:** 1. Locations → Create Complete Hierarchy  
+**Method:** POST  
+**URL:** `http://localhost:8080/api/locations/hierarchy`  
+
+**Body:**
+```json
+{
+  "provinceId": 1,
+  "districtName": "Hierarchy District",
+  "districtCode": "HD",
+  "sectorName": "Hierarchy Sector",
+  "sectorCode": "HS",
+  "cellName": "Hierarchy Cell", 
+  "cellCode": "HC",
+  "villageName": "Hierarchy Village",
+  "villageCode": "HV"
+}
+```
+
+**Expected Response:** Village with complete hierarchy path
+
+**Note:** Creates District → Sector → Cell → Village all in one request!
+
+---
+
 ### ✅ Test 12: Get Locations with Pagination (Requirement #3)
 **Folder:** 1. Locations → Get Locations with Pagination  
 **Method:** GET  
@@ -993,6 +1030,9 @@ curl http://localhost:8080/api/users/province/code/KGL
 
 # Step 5: Verify user appears in village query
 curl http://localhost:8080/api/users/village/name/Kiyovu
+
+# Step 5B: Verify user appears in village ID query (RECOMMENDED)
+curl http://localhost:8080/api/users/village/id/13
 ```
 
 ---

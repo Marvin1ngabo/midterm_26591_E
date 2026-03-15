@@ -105,14 +105,63 @@ Current villages in the system:
 ```http
 POST /api/locations
 Content-Type: application/json
+```
 
+**Create a Sector:**
+```json
 {
-  "name": "New Village",
-  "code": "NV",
-  "type": "VILLAGE",
-  "parentId": 10
+  "name": "New Sector",
+  "code": "NS",
+  "type": "SECTOR",
+  "parentId": 7
 }
 ```
+
+**Create a Cell:**
+```json
+{
+  "name": "New Cell", 
+  "code": "NC",
+  "type": "CELL",
+  "parentId": 17
+}
+```
+
+**Create a Village:**
+```json
+{
+  "name": "New Village",
+  "code": "NV", 
+  "type": "VILLAGE",
+  "parentId": 18
+}
+```
+
+**Location Types:** `PROVINCE`, `DISTRICT`, `SECTOR`, `CELL`, `VILLAGE`
+
+**Note**: Use `parentId` to specify the parent location. For provinces, use `parentId: null`.
+
+### **Create Complete Hierarchy (NEW)**
+```http
+POST /api/locations/hierarchy
+Content-Type: application/json
+
+{
+  "provinceId": 1,
+  "districtName": "New District",
+  "districtCode": "ND",
+  "sectorName": "New Sector", 
+  "sectorCode": "NS",
+  "cellName": "New Cell",
+  "cellCode": "NC",
+  "villageName": "New Village",
+  "villageCode": "NV"
+}
+```
+
+**Creates entire hierarchy in one request:** District → Sector → Cell → Village
+
+**Returns:** The created village with complete hierarchy path
 
 ### **Delete Location (Only if No Children)**
 ```http
@@ -245,6 +294,16 @@ GET /api/users/cell/name/Bibare
 GET /api/users/village/name/Kiyovu
 ```
 **Note**: Direct match since users are typically registered at village level
+
+#### Get Users by Village ID (RECOMMENDED)
+```http
+GET /api/users/village/id/13
+```
+**Available Village IDs:**
+- **Nyagatovu**: ID = 12
+- **Kiyovu**: ID = 13
+
+**Note**: More efficient than village name lookup. Use village ID for better performance.
 
 #### Get Users by Location Hierarchy (Flexible)
 ```http
@@ -538,6 +597,9 @@ curl "http://localhost:8080/api/users/district/name/Gasabo"
 
 # By village name (direct match)
 curl "http://localhost:8080/api/users/village/name/Kiyovu"
+
+# By village ID (RECOMMENDED - more efficient)
+curl "http://localhost:8080/api/users/village/id/13"
 
 # By complete location hierarchy (flexible)
 curl "http://localhost:8080/api/users/location?provinceName=Kigali%20City&districtName=Gasabo&villageName=Kiyovu"

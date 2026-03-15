@@ -6,6 +6,7 @@ import com.fixmatch.dto.UserRegistrationRequest;
 import com.fixmatch.dto.UserResponseDTO;
 import com.fixmatch.util.UserMapper;
 import com.fixmatch.service.UserService;
+import com.fixmatch.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -28,6 +29,9 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+    
+    @Autowired
+    private UserRepository userRepository;
 
     /**
      * Register new user with village in request body or locationId parameter
@@ -213,6 +217,20 @@ public class UserController {
     public ResponseEntity<List<User>> getUsersByVillageName(@PathVariable String name) {
         List<User> users = userService.getUsersByVillageName(name);
         return ResponseEntity.ok(users);
+    }
+
+    /**
+     * Get users by village ID (converts ID to name internally)
+     */
+    @GetMapping("/village/id/{villageId}")
+    public ResponseEntity<List<User>> getUsersByVillageId(@PathVariable Long villageId) {
+        try {
+            // Use the existing repository method that works with any location ID
+            List<User> users = userRepository.findByLocationLocationId(villageId);
+            return ResponseEntity.ok(users);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     /**

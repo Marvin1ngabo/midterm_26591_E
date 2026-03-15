@@ -187,6 +187,36 @@ public class LocationService {
     }
 
     /**
+     * Create complete location hierarchy in one operation
+     */
+    public Location createLocationHierarchy(Long provinceId, String districtName, String districtCode,
+                                          String sectorName, String sectorCode, String cellName, String cellCode,
+                                          String villageName, String villageCode) {
+        
+        // Get the province
+        Location province = locationRepository.findById(provinceId)
+            .orElseThrow(() -> new RuntimeException("Province not found with ID: " + provinceId));
+        
+        // Create district
+        Location district = new Location(districtName, districtCode, LocationType.DISTRICT, province);
+        district = locationRepository.save(district);
+        
+        // Create sector
+        Location sector = new Location(sectorName, sectorCode, LocationType.SECTOR, district);
+        sector = locationRepository.save(sector);
+        
+        // Create cell
+        Location cell = new Location(cellName, cellCode, LocationType.CELL, sector);
+        cell = locationRepository.save(cell);
+        
+        // Create village
+        Location village = new Location(villageName, villageCode, LocationType.VILLAGE, cell);
+        village = locationRepository.save(village);
+        
+        return village;
+    }
+
+    /**
      * Inner class for location statistics
      */
     public static class LocationStatistics {

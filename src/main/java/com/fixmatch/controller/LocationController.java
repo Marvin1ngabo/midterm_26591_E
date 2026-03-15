@@ -189,6 +189,31 @@ public class LocationController {
     }
 
     /**
+     * Create complete location hierarchy in one request
+     * Creates District → Sector → Cell → Village all at once
+     */
+    @PostMapping("/hierarchy")
+    public ResponseEntity<LocationDTO> createLocationHierarchy(@RequestBody CreateHierarchyRequest request) {
+        try {
+            Location village = locationService.createLocationHierarchy(
+                request.getProvinceId(),
+                request.getDistrictName(),
+                request.getDistrictCode(),
+                request.getSectorName(), 
+                request.getSectorCode(),
+                request.getCellName(),
+                request.getCellCode(),
+                request.getVillageName(),
+                request.getVillageCode()
+            );
+            LocationDTO villageDTO = LocationMapper.toDTO(village);
+            return ResponseEntity.ok(villageDTO);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    /**
      * Delete location (only if no children)
      */
     @DeleteMapping("/{id}")
@@ -199,6 +224,49 @@ public class LocationController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error deleting location: " + e.getMessage());
         }
+    }
+
+    /**
+     * Request DTO for creating complete location hierarchy
+     */
+    public static class CreateHierarchyRequest {
+        private Long provinceId;
+        private String districtName;
+        private String districtCode;
+        private String sectorName;
+        private String sectorCode;
+        private String cellName;
+        private String cellCode;
+        private String villageName;
+        private String villageCode;
+
+        // Getters and setters
+        public Long getProvinceId() { return provinceId; }
+        public void setProvinceId(Long provinceId) { this.provinceId = provinceId; }
+        
+        public String getDistrictName() { return districtName; }
+        public void setDistrictName(String districtName) { this.districtName = districtName; }
+        
+        public String getDistrictCode() { return districtCode; }
+        public void setDistrictCode(String districtCode) { this.districtCode = districtCode; }
+        
+        public String getSectorName() { return sectorName; }
+        public void setSectorName(String sectorName) { this.sectorName = sectorName; }
+        
+        public String getSectorCode() { return sectorCode; }
+        public void setSectorCode(String sectorCode) { this.sectorCode = sectorCode; }
+        
+        public String getCellName() { return cellName; }
+        public void setCellName(String cellName) { this.cellName = cellName; }
+        
+        public String getCellCode() { return cellCode; }
+        public void setCellCode(String cellCode) { this.cellCode = cellCode; }
+        
+        public String getVillageName() { return villageName; }
+        public void setVillageName(String villageName) { this.villageName = villageName; }
+        
+        public String getVillageCode() { return villageCode; }
+        public void setVillageCode(String villageCode) { this.villageCode = villageCode; }
     }
 
     /**

@@ -192,6 +192,75 @@
           }
         },
         {
+          "name": "Create New Sector (Example)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"New Sector\",\n  \"code\": \"NS\",\n  \"type\": \"SECTOR\",\n  \"parentId\": 7\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/locations",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "locations"]
+            }
+          }
+        },
+        {
+          "name": "Create New Cell (Example)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"New Cell\",\n  \"code\": \"NC\",\n  \"type\": \"CELL\",\n  \"parentId\": 17\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/locations",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "locations"]
+            }
+          }
+        },
+        {
+          "name": "Create Complete Hierarchy (District→Sector→Cell→Village)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"provinceId\": 1,\n  \"districtName\": \"New District\",\n  \"districtCode\": \"ND\",\n  \"sectorName\": \"New Sector\",\n  \"sectorCode\": \"NS\",\n  \"cellName\": \"New Cell\",\n  \"cellCode\": \"NC\",\n  \"villageName\": \"New Village\",\n  \"villageCode\": \"NV\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/locations/hierarchy",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "locations", "hierarchy"]
+            }
+          }
+        },
+        {
           "name": "Delete Location (Only if No Children)",
           "request": {
             "method": "DELETE",
@@ -395,6 +464,20 @@
               "host": ["localhost"],
               "port": "8080",
               "path": ["api", "users", "village", "name", "Kiyovu"]
+            }
+          }
+        },
+        {
+          "name": "Get Users by Village ID (RECOMMENDED)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/users/village/id/13",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "users", "village", "id", "13"]
             }
           }
         },
